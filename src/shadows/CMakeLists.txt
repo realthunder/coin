@@ -2,9 +2,11 @@
 set(COIN_SHADOWS_FILES
 	SoShadowGroup.cpp
 	SoShadowStyle.cpp
+	SoShadowTransparency.cpp
 	SoShadowSpotLight.cpp
 	SoShadowDirectionalLight.cpp
 	SoShadowStyleElement.cpp
+    SoShadowTransparencyElement.cpp
 	SoShadowCulling.cpp
 	SoGLShadowCullingElement.cpp
 )

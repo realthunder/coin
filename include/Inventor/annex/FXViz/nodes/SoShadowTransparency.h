@@ -1,8 +1,8 @@
-#ifndef COIN_SOSHADOWSTYLEELEMENT_H
-#define COIN_SOSHADOWSTYLEELEMENT_H
+#ifndef COIN_SOSHADOWTRANSPARENCY_H
+#define COIN_SOSHADOWTRANSPARENCY_H
 
 /**************************************************************************\
- * Copyright (c) Kongsberg Oil & Gas Technologies AS
+ * Copyright (c) Zheng, Lei (realthunder) <realthunder.dev@gmail.com>
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,34 +33,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \**************************************************************************/
 
-#include <Inventor/elements/SoInt32Element.h>
+#include <Inventor/nodes/SoSubNode.h>
+#include <Inventor/fields/SoSFFloat.h>
+#include <Inventor/annex/FXViz/elements/SoShadowTransparencyElement.h>
 
-class COIN_DLL_API SoShadowStyleElement : public SoInt32Element {
-  typedef SoInt32Element inherited;
+class COIN_DLL_API SoShadowTransparency : public SoNode {
+  typedef SoNode inherited;
 
-  SO_ELEMENT_HEADER(SoShadowStyleElement);
+  SO_NODE_HEADER(SoShadowTransparency);
+
 public:
   static void initClass(void);
+  SoShadowTransparency(void);
+
+  SoSFFloat transparency;
+
+  virtual void GLRender(SoGLRenderAction * action);
+
 protected:
-  virtual ~SoShadowStyleElement();
-
-public:
-  enum StyleFlags {
-    NO_SHADOWING = 0x0, 
-    CASTS_SHADOW = 0x1, 
-    SHADOWED     = 0x2,
-    CASTS_SHADOW_AND_SHADOWED = CASTS_SHADOW|SHADOWED,
-    TRANSPARENT_SHADOWED = 0x4|SHADOWED 
-  };
-  
-  virtual void init(SoState * state);
-  
-  static  void set(SoState * const state, SoNode * const node,
-                   const int styleflags);
-  static void set(SoState * const state, const int styleflags);
-  static int get(SoState * const state);
-  static int getDefault(void);
-
+  virtual ~SoShadowTransparency();
 };
 
-#endif // !COIN_SOSHADOWSTYLEELEMENT_H
+#endif // !COIN_SOSHADOWTRANSPARENCY_H

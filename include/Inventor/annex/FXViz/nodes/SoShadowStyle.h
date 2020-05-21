@@ -50,7 +50,8 @@ public:
     NO_SHADOWING = SoShadowStyleElement::NO_SHADOWING, 
     CASTS_SHADOW = SoShadowStyleElement::CASTS_SHADOW, 
     SHADOWED = SoShadowStyleElement::SHADOWED, 
-    CASTS_SHADOW_AND_SHADOWED = SoShadowStyleElement::CASTS_SHADOW_AND_SHADOWED 
+    CASTS_SHADOW_AND_SHADOWED = SoShadowStyleElement::CASTS_SHADOW_AND_SHADOWED,
+    TRANSPARENT_SHADOWED = SoShadowStyleElement::TRANSPARENT_SHADOWED 
   };
   
   SoSFEnum style;

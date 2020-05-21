@@ -309,8 +309,10 @@
 #include <Inventor/elements/SoEnvironmentElement.h>
 #include <Inventor/elements/SoClipPlaneElement.h>
 #include <Inventor/annex/FXViz/elements/SoShadowStyleElement.h>
+#include <Inventor/annex/FXViz/elements/SoShadowTransparencyElement.h>
 #include <Inventor/annex/FXViz/elements/SoGLShadowCullingElement.h>
 #include <Inventor/annex/FXViz/nodes/SoShadowStyle.h>
+#include <Inventor/annex/FXViz/nodes/SoShadowTransparency.h>
 #include <Inventor/annex/FXViz/nodes/SoShadowCulling.h>
 #include <Inventor/annex/FXViz/nodes/SoShadowSpotLight.h>
 #include <Inventor/annex/FXViz/nodes/SoShadowDirectionalLight.h>
@@ -622,6 +624,7 @@ public:
     texunit1(NULL),
     lightmodel(NULL),
     twosided(NULL),
+    shadowalpha(NULL),
     numtexunitsinscene(1),
     hasclipplanes(FALSE),
     subgraphsearchenabled(TRUE)
@@ -647,6 +650,7 @@ public:
     if (this->twosided) this->twosided->unref();
     if (this->texunit0) this->texunit0->unref();
     if (this->texunit1) this->texunit1->unref();
+    if (this->shadowalpha) this->shadowalpha->unref();
     if (this->vertexshadercache) this->vertexshadercache->unref();
     if (this->fragmentshadercache) this->fragmentshadercache->unref();
     if (this->cameratransform) this->cameratransform->unref();
@@ -745,6 +749,7 @@ public:
   SoShaderParameter1i * texunit1;
   SoShaderParameter1i * lightmodel;
   SoShaderParameter1i * twosided;
+  SoShaderParameter1f * shadowalpha;
 
   int numtexunitsinscene;
   SbBool hasclipplanes;
@@ -809,8 +814,10 @@ SoShadowGroup::init(void)
 {
   SoShadowGroup::initClass();
   SoShadowStyleElement::initClass();
+  SoShadowTransparencyElement::initClass();
   SoGLShadowCullingElement::initClass();
   SoShadowStyle::initClass();
+  SoShadowTransparency::initClass();
   SoShadowSpotLight::initClass();
   SoShadowDirectionalLight::initClass();
   SoShadowCulling::initClass();
@@ -1820,7 +1827,15 @@ SoShadowGroupP::setFragmentShader(SoState * state)
     }
   }
 
-  gen.addMainStatement("color = vec3(clamp(color.r, 0.0, 1.0), clamp(color.g, 0.0, 1.0), clamp(color.b, 0.0, 1.0));");
+  gen.addMainStatement("if (shadow_alpha != 0.0 && mydiffuse.a == 0.0 && shadeFactor < 1.0) {"
+                            "mydiffuse.a = shadow_alpha;"
+                            "color = vec3(clamp(color.r, 0.0, mydiffuse.r),"
+                                         "clamp(color.g, 0.0, mydiffuse.g),"
+                                         "clamp(color.b, 0.0, mydiffuse.b));}\n"
+                      "else color = vec3(clamp(color.r, 0.0, 1.0),"
+                                        "clamp(color.g, 0.0, 1.0),"
+                                        "clamp(color.b, 0.0, 1.0));");
+
   gen.addMainStatement("if (coin_light_model != 0) { color *= texcolor.rgb; color += scolor; }\n"
                        "else color = mydiffuse.rgb * texcolor.rgb;\n");
 
@@ -1853,6 +1868,7 @@ SoShadowGroupP::setFragmentShader(SoState * state)
   gen.addMainStatement("gl_FragColor = vec4(color, mydiffuse.a);");
   gen.addDeclaration("uniform sampler2D textureMap0;\n", FALSE);
   gen.addDeclaration("uniform int coin_texunit0_model;\n", FALSE);
+  gen.addDeclaration("uniform float shadow_alpha;\n", FALSE);
   if (this->numtexunitsinscene > 1) {
     gen.addDeclaration("uniform int coin_texunit1_model;\n", FALSE);
     gen.addDeclaration("uniform sampler2D textureMap1;\n", FALSE);
@@ -1909,6 +1925,13 @@ SoShadowGroupP::setFragmentShader(SoState * state)
 
   SoShaderParameter1i * texmap1 = NULL;
 
+  if (!this->shadowalpha) {
+    this->shadowalpha = new SoShaderParameter1f;
+    this->shadowalpha->ref();
+    this->shadowalpha->name = "shadow_alpha";
+    this->shadowalpha->value = 1.0f;
+  }
+
   if (!this->texunit0) {
     this->texunit0 = new SoShaderParameter1i;
     this->texunit0->ref();
@@ -1936,6 +1959,7 @@ SoShadowGroupP::setFragmentShader(SoState * state)
     this->lightmodel->name = "coin_light_model";
     this->lightmodel->value = 1;
   }
+  this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), this->shadowalpha);
   this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), texmap);
   if (texmap1) this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), texmap1);
   this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), this->texunit0);
@@ -2101,6 +2125,15 @@ SoShadowGroupP::shader_enable_cb(void * closure,
       if (enable) glEnable(GL_TEXTURE_2D);
       else glDisable(GL_TEXTURE_2D);
       cc_glglue_glActiveTexture(glue, GL_TEXTURE0);
+    }
+  }
+  if (enable) {
+    float alpha = 1.0f;
+    if (SoShadowStyleElement::get(state) == SoShadowStyleElement::TRANSPARENT_SHADOWED)
+      alpha = 1.0f - SoShadowTransparencyElement::get(state);
+    if (thisp->shadowalpha && thisp->shadowalpha->value.getValue() != alpha) {
+      thisp->shadowalpha->value = alpha;
+      thisp->fragmentshader->updateParameters(state);
     }
   }
 }

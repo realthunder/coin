@@ -57,6 +57,10 @@
 #include <Inventor/elements/SoMultiTextureMatrixElement.h>
 #include <Inventor/elements/SoViewVolumeElement.h>
 #include <Inventor/elements/SoViewingMatrixElement.h>
+#include <Inventor/elements/SoGLShaderProgramElement.h>
+#include <Inventor/elements/SoShapeStyleElement.h>
+#include <Inventor/elements/SoPolygonOffsetElement.h>
+#include <Inventor/annex/FXViz/elements/SoShadowStyleElement.h>
 #include <Inventor/errors/SoDebugError.h>
 #include <Inventor/misc/SoGLImage.h>
 #include <Inventor/misc/SoState.h>
@@ -438,6 +442,21 @@ soshape_bumprender::renderBumpSpecular(SoState * state,
     SoMultiTextureEnabledElement::getEnabledUnits(state, lastenabled); 
 
   state->push();
+
+  SbBool restoreShader = false;
+  if (SoShapeStyleElement::get(state)->getFlags() & SoShapeStyleElement::SHADOWS) {
+    if (SoShadowStyleElement::get(state) & SoShadowStyleElement::SHADOWED) {
+        SoGLShaderProgramElement::enable(state, FALSE);
+        restoreShader = true;
+    }
+    SoPolygonOffsetElement::set(state, 
+                                0, 
+                                1.0,
+                                1.0,
+                                SoPolygonOffsetElement::FILLED,
+                                TRUE);
+  }
+
   SoMultiTextureEnabledElement::disableAll(state);
   SoGLMultiTextureEnabledElement::set(state, NULL, 0, TRUE); // enable GL_TEXTURE_2D
   
@@ -572,6 +591,9 @@ soshape_bumprender::renderBumpSpecular(SoState * state,
     glMatrixMode(GL_MODELVIEW);
   }
 
+  if (restoreShader)
+    SoGLShaderProgramElement::enable(state, TRUE);
+
   state->pop();
 }
 
@@ -596,6 +618,21 @@ soshape_bumprender::renderBump(SoState * state,
     SoMultiTextureEnabledElement::getEnabledUnits(state, lastenabled); 
 
   state->push();
+
+  SbBool restoreShader = false;
+  if (SoShapeStyleElement::get(state)->getFlags() & SoShapeStyleElement::SHADOWS) {
+    if (SoShadowStyleElement::get(state) & SoShadowStyleElement::SHADOWED) {
+        SoGLShaderProgramElement::enable(state, FALSE);
+        restoreShader = true;
+    }
+    SoPolygonOffsetElement::set(state, 
+                                0, 
+                                1.0,
+                                1.0,
+                                SoPolygonOffsetElement::FILLED,
+                                TRUE);
+  }
+
   // only use vertex program if two texture units (or less) are used
   // (only two units supported in the vertex program)
   SbBool use_vertex_program = lastenabled <= 1 && SoGLDriverDatabase::isSupported(glue, SO_GL_ARB_VERTEX_PROGRAM);
@@ -725,6 +762,10 @@ soshape_bumprender::renderBump(SoState * state,
     glLoadMatrixf(oldtexture0matrix[0]);
     glMatrixMode(GL_MODELVIEW);
   }
+
+  if (restoreShader)
+    SoGLShaderProgramElement::enable(state, TRUE);
+
   state->pop();
 }
 

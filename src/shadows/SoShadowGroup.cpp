@@ -724,7 +724,7 @@ public:
   void setVertexShader(SoState * state);
   void setFragmentShader(SoState * state);
   void updateSpotCamera(SoState * state, SoShadowLightCache * cache, const SbMatrix & transform);
-  void updateDirectionalCamera(SoState * state, SoShadowLightCache * cache, const SbMatrix & transform);
+  void updateDirectionalCamera(SoState * state, SoShadowLightCache * cache, const SbMatrix & transform, SbBool fullupdate);
   const SbXfBox3f & calcBBox(SoShadowLightCache * cache);
 
   void renderDepthMap(SoShadowLightCache * cache,
@@ -1088,7 +1088,7 @@ SoShadowGroupP::updateShadowLights(SoGLRenderAction * action)
         }
         else if (cache->light->isOfType(SoDirectionalLight::getClassTypeId())) {
           this->matrixaction.apply(path);
-          this->updateDirectionalCamera(state, cache, this->matrixaction.getMatrix());
+          this->updateDirectionalCamera(state, cache, this->matrixaction.getMatrix(), TRUE);
         }
         i2++;
       }
@@ -1099,7 +1099,7 @@ SoShadowGroupP::updateShadowLights(SoGLRenderAction * action)
     SoShadowLightCache * cache = this->shadowlights[i];
     if (cache->light->isOfType(SoDirectionalLight::getClassTypeId())) {
       this->matrixaction.apply(cache->path);
-      this->updateDirectionalCamera(state, cache, this->matrixaction.getMatrix());
+      this->updateDirectionalCamera(state, cache, this->matrixaction.getMatrix(), FALSE);
     }
     assert(cache->texunit >= 0);
     assert(cache->lightid >= 0);
@@ -1256,7 +1256,7 @@ SoShadowGroupP::updateSpotCamera(SoState * COIN_UNUSED_ARG(state), SoShadowLight
 }
 
 void
-SoShadowGroupP::updateDirectionalCamera(SoState * state, SoShadowLightCache * cache, const SbMatrix & transform)
+SoShadowGroupP::updateDirectionalCamera(SoState * state, SoShadowLightCache * cache, const SbMatrix & transform, SbBool fullupdate)
 {
   SoOrthographicCamera * cam = static_cast<SoOrthographicCamera*>(cache->camera);
   assert(cache->light->isOfType(SoShadowDirectionalLight::getClassTypeId()));
@@ -1268,8 +1268,31 @@ SoShadowGroupP::updateDirectionalCamera(SoState * state, SoShadowLightCache * ca
   dir.normalize();
   transform.multDirMatrix(dir, dir);
   dir.normalize();
-  cam->orientation.setValue(SbRotation(SbVec3f(0.0f, 0.0f, -1.0f), dir));
 
+  SbPlane plane(dir, cam->position.getValue());
+  // move to eye space
+  plane.transform(SoViewingMatrixElement::get(state));
+  SbVec3f N = plane.getNormal();
+  float D = plane.getDistanceFromOrigin();
+
+#if 0
+  fprintf(stderr,"isect: %g %g %g, %g %g %g\n",
+          isect.getMin()[0],
+          isect.getMin()[1],
+          isect.getMin()[2],
+          isect.getMax()[0],
+          isect.getMax()[1],
+          isect.getMax()[2]);
+  fprintf(stderr,"plane: %g %g %g, %g\n", N[0], N[1], N[2], D);
+  fprintf(stderr,"nearfar: %g %g\n", cam->nearDistance.getValue(), cam->farDistance.getValue());
+  fprintf(stderr,"aspect: %g\n", SoViewportRegionElement::get(state).getViewportAspectRatio());
+#endif
+
+  cache->fragment_lightplane->value.setValue(N[0], N[1], N[2], D);
+
+  if (!fullupdate) return;
+
+  cam->orientation.setValue(SbRotation(SbVec3f(0.0f, 0.0f, -1.0f), dir));
   SbViewVolume vv = SoViewVolumeElement::get(state);
   const SbXfBox3f & worldbox = this->calcBBox(cache);
   SbBool visible = TRUE;
@@ -1306,27 +1329,6 @@ SoShadowGroupP::updateDirectionalCamera(SoState * state, SoShadowLightCache * ca
   // from origo. Add a little slack (multiply by 1.01)
   cam->nearDistance = -box.getMax()[2]*1.01f;
   cam->farDistance = -box.getMin()[2]*1.01f;
-
-  SbPlane plane(dir, cam->position.getValue());
-  // move to eye space
-  plane.transform(SoViewingMatrixElement::get(state));
-  SbVec3f N = plane.getNormal();
-  float D = plane.getDistanceFromOrigin();
-
-#if 0
-  fprintf(stderr,"isect: %g %g %g, %g %g %g\n",
-          isect.getMin()[0],
-          isect.getMin()[1],
-          isect.getMin()[2],
-          isect.getMax()[0],
-          isect.getMax()[1],
-          isect.getMax()[2]);
-  fprintf(stderr,"plane: %g %g %g, %g\n", N[0], N[1], N[2], D);
-  fprintf(stderr,"nearfar: %g %g\n", cam->nearDistance.getValue(), cam->farDistance.getValue());
-  fprintf(stderr,"aspect: %g\n", SoViewportRegionElement::get(state).getViewportAspectRatio());
-#endif
-
-  cache->fragment_lightplane->value.setValue(N[0], N[1], N[2], D);
 
   //SoShadowGroup::VisibilityFlag visflag = (SoShadowGroup::VisibilityFlag) PUBLIC(this)->visibilityFlag.getValue();
 

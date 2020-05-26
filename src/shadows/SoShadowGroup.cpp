@@ -1827,6 +1827,13 @@ SoShadowGroupP::setFragmentShader(SoState * state)
     }
   }
 
+  gen.addMainStatement("if (coin_light_model != 0) { color *= texcolor.rgb; color += scolor; }\n"
+                       // When shading is off, the shadeFactor seems too
+                       // aggressive. The clamp is added here to mix the shadow
+                       // color with the ground. It would be better to expose
+                       // this as an attribute somehow.
+                       "else color = clamp(shadeFactor,0.5,1.0) * mydiffuse.rgb * texcolor.rgb;\n");
+
   gen.addMainStatement("if (shadow_alpha != 0.0 && mydiffuse.a == 0.0 && shadeFactor < 1.0) {"
                             "mydiffuse.a = shadow_alpha;"
                             "color = vec3(clamp(color.r, 0.0, mydiffuse.r),"
@@ -1835,9 +1842,6 @@ SoShadowGroupP::setFragmentShader(SoState * state)
                       "else color = vec3(clamp(color.r, 0.0, 1.0),"
                                         "clamp(color.g, 0.0, 1.0),"
                                         "clamp(color.b, 0.0, 1.0));");
-
-  gen.addMainStatement("if (coin_light_model != 0) { color *= texcolor.rgb; color += scolor; }\n"
-                       "else color = mydiffuse.rgb * texcolor.rgb;\n");
 
   int32_t fogType = this->getFog(state);
 
@@ -2131,10 +2135,12 @@ SoShadowGroupP::shader_enable_cb(void * closure,
     float alpha = 1.0f;
     if (SoShadowStyleElement::get(state) == SoShadowStyleElement::TRANSPARENT_SHADOWED)
       alpha = 1.0f - SoShadowTransparencyElement::get(state);
-    if (thisp->shadowalpha && thisp->shadowalpha->value.getValue() != alpha) {
+    if (thisp->shadowalpha && thisp->shadowalpha->value.getValue() != alpha)
       thisp->shadowalpha->value = alpha;
-      thisp->fragmentshader->updateParameters(state);
-    }
+
+    // calling updateParameters here not only updates shadowalpha above, but
+    // also updates any internal coin parameters
+    thisp->fragmentshader->updateParameters(state);
   }
 }
 

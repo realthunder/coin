@@ -519,7 +519,7 @@ public:
     if (this->gaussalphasceneH) this->gaussalphasceneH->unref();
     if (this->gaussalphasceneV) this->gaussalphasceneV->unref();
     if (this->depthtest) this->depthtest->unref();
-    if (this->bboxnode) this->bboxnode->ref();
+    if (this->bboxnode) this->bboxnode->unref();
     if (this->maxshadowdistance) this->maxshadowdistance->unref();
     if (this->dropoffrate) this->dropoffrate->unref();
     if (this->coscutoff) this->coscutoff->unref();

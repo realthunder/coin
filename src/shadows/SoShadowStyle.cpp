@@ -53,8 +53,6 @@
 #include <cstdio>
 
 #include <Inventor/actions/SoGLRenderAction.h>
-#include <Inventor/elements/SoShapeStyleElement.h>
-#include <Inventor/elements/SoGLShaderProgramElement.h>
 
 #include "nodes/SoSubNodeP.h"
 #include "shaders/SoGLShaderProgram.h"
@@ -138,25 +136,9 @@ SoShadowStyle::GLRender(SoGLRenderAction * action)
 {
   SoState * state = action->getState();
 
-  unsigned int prev = SoShadowStyleElement::get(state);
-
   SoShadowStyleElement::set(state,
                             this,
                             (int) this->style.getValue());
-
-  if (SoShapeStyleElement::get(state)->getFlags() & SoShapeStyleElement::SHADOWS) {
-    if (this->style.getValue() & SHADOWED) {
-      if (prev != TRANSPARENT_SHADOWED && this->style.getValue() == TRANSPARENT_SHADOWED) {
-        // Make sure to trigger SoShadowGroup shader enable callback, to update
-        // its shader parameters.
-        SoGLShaderProgramElement::enable(state, FALSE);
-      }
-      SoGLShaderProgramElement::enable(state, TRUE);
-    }
-    else {
-      SoGLShaderProgramElement::enable(state, FALSE);
-    }
-  }
 }
 
 

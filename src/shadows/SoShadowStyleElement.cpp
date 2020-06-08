@@ -42,6 +42,8 @@
 */
 
 #include <Inventor/annex/FXViz/elements/SoShadowStyleElement.h>
+#include <Inventor/elements/SoShapeStyleElement.h>
+#include <Inventor/elements/SoGLShaderProgramElement.h>
 
 
 #include <cassert>
@@ -72,7 +74,23 @@ SoShadowStyleElement::set(SoState * const state,
                           SoNode * const node,
                           const int style)
 {
+  unsigned int prev = get(state);
+
   SoInt32Element::set(classStackIndex, state, node, style);
+
+  if (SoShapeStyleElement::get(state)->getFlags() & SoShapeStyleElement::SHADOWS) {
+    if (style & SHADOWED) {
+      if (prev != TRANSPARENT_SHADOWED && style == TRANSPARENT_SHADOWED) {
+        // Make sure to trigger SoShadowGroup shader enable callback, to update
+        // its shader parameters.
+        SoGLShaderProgramElement::enable(state, FALSE);
+      }
+      SoGLShaderProgramElement::enable(state, TRUE);
+    }
+    else {
+      SoGLShaderProgramElement::enable(state, FALSE);
+    }
+  }
 }
 
 /*!

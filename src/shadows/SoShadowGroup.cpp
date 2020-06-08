@@ -511,7 +511,7 @@ public:
 
   void updateGaussMap(float smoothing)
   {
-    smoothing = floor((smoothing+1e-6)*10.0f);
+    smoothing = floorf((smoothing+1e-6f)*10.0f);
     if (!this->depthmap || smoothing == this->smoothing) return;
     this->smoothing = smoothing;
     if (this->gaussmap) {
@@ -623,7 +623,7 @@ public:
   float nearval;
   int texunit;
   int lightid;
-  uint32_t depthmapid;
+  SbUniqueId depthmapid;
   float smoothing;
 
   SoSeparator * bboxnode;
@@ -1798,8 +1798,8 @@ SoShadowGroupP::setFragmentShader(SoState * state)
       int center = count/2;
       for (int j=0;j<count;++j) {
         for (int k=0;k<count;++k) {
-            offsets[j*count*2 + k*2] = k-center;
-            offsets[j*count*2 + k*2 + 1] = j-center;
+            offsets[j*count*2 + k*2] = float(k-center);
+            offsets[j*count*2 + k*2 + 1] = float(j-center);
         }
       }
       count *= count;

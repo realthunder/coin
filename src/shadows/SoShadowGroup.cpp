@@ -952,6 +952,8 @@ SoShadowGroup::notify(SoNotList * nl)
       }
     }
   }
+  else if (nl->getLastField() == &this->precision)
+    PRIVATE(this)->deleteShadowLights();
 
   if (PRIVATE(this)->vertexshadercache) {
     PRIVATE(this)->vertexshadercache->invalidate();

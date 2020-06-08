@@ -1944,9 +1944,9 @@ SoShadowGroupP::setFragmentShader(SoState * state)
         gen.addMainStatement("scolor += specular.rgb * gl_FrontMaterial.specular.rgb;\n");
       }
 
-      if (dirlight) gen.addNamedFunction(SbName("lights/DirectionalLight"), FALSE);
       if (pointlight) gen.addNamedFunction(SbName("lights/PointLight"), FALSE);
     }
+    if (dirlight) gen.addNamedFunction(SbName("lights/DirectionalLight"), FALSE);
     if (spotlight) gen.addNamedFunction(SbName("lights/SpotLight"), FALSE);
   }
 

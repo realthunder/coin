@@ -1187,10 +1187,16 @@ SoShadowGroupP::updateSpotCamera(SoState * COIN_UNUSED_ARG(state), SoShadowLight
   (void) dir.normalize();
   float cutoff = light->cutOffAngle.getValue();
   cam->position.setValue(pos);
+
+  // Realthunder: not sure about the following remarks. Can't we just move the
+  // far plane back a bit to fully enclose the circle casted by the line cone?
+  // A far plane that is too far would result a low quanlity shadow, but beats
+  // no shadow at all times.
+  //
   // the maximum heightAngle we can render with a camera is < PI/2,.
   // The max cutoff is therefore PI/4. Some slack is needed, and 0.78
   // is about the maximum angle we can do.
-  if (cutoff > 0.78f) cutoff = 0.78f;
+  // if (cutoff > 0.78f) cutoff = 0.78f;
 
   cam->orientation.setValue(SbRotation(SbVec3f(0.0f, 0.0f, -1.0f), dir));
   static_cast<SoPerspectiveCamera*> (cam)->heightAngle.setValue(cutoff * 2.0f);
@@ -1260,7 +1266,11 @@ SoShadowGroupP::updateSpotCamera(SoState * COIN_UNUSED_ARG(state), SoShadowLight
     cam->farDistance = cache->farval;
   }
 
-  float realfarval = cutoff >= 0.0f ? cache->farval / float(cos(cutoff * 2.0f)) : cache->farval;
+  // float realfarval = cutoff >= 0.0f ? cache->farval / float(cos(cutoff)) : cache->farval;
+  //
+  // Just move the far plane a bit further to enclose the light cone circle. 1/0.7 = 1/cos(PI/4) 
+  float realfarval = cache->farval / 0.7f;
+
   cache->fragment_farval->value = realfarval;
   cache->vsm_farval->value = realfarval;
 

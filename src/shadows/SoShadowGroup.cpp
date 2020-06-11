@@ -710,7 +710,7 @@ public:
       SoFullPath * p = (SoFullPath*) pl[i];
       SoNode * tail = p->getTail();
       if (tail->isOfType(SoSpotLight::getClassTypeId()) ||
-          tail->isOfType(SoShadowDirectionalLight::getClassTypeId())) {
+          tail->isOfType(SoDirectionalLight::getClassTypeId())) {
         SoTempPath * tp = new SoTempPath(p->getLength());
         tp->ref();
         tp->setHead(p->getHead());
@@ -1046,12 +1046,17 @@ SoShadowGroupP::updateShadowLights(SoGLRenderAction * action)
     int maxlights = maxunits - this->numtexunitsinscene;
     SbList <SoTempPath*> & pl = this->lightpaths;
 
+    SbBool lightschanged = FALSE;
     int numlights = 0;
     for (i = 0; i < pl.getLength(); i++) {
       SoLight * light = (SoLight*)((SoFullPath*)(pl[i]))->getTail();
-      if (light->on.getValue() && (numlights < maxlights)) numlights++;
+      if (light->on.getValue() && (numlights < maxlights)){
+        if (numlights < this->shadowlights.getLength() && this->shadowlights[numlights]->light != light)
+          lightschanged = TRUE;
+        numlights++;
+      }
     }
-    if (numlights != this->shadowlights.getLength()) {
+    if (lightschanged || numlights != this->shadowlights.getLength()) {
       // just delete and recreate all if the number of spot lights have changed
       this->deleteShadowLights();
       int id = lightidoffset;
@@ -1290,10 +1295,12 @@ void
 SoShadowGroupP::updateDirectionalCamera(SoState * state, SoShadowLightCache * cache, const SbMatrix & transform, SbBool fullupdate)
 {
   SoOrthographicCamera * cam = static_cast<SoOrthographicCamera*>(cache->camera);
-  assert(cache->light->isOfType(SoShadowDirectionalLight::getClassTypeId()));
-  SoShadowDirectionalLight * light = static_cast<SoShadowDirectionalLight*> (cache->light);
+  assert(cache->light->isOfType(SoDirectionalLight::getClassTypeId()));
+  SoDirectionalLight * light = static_cast<SoDirectionalLight*> (cache->light);
 
-  float maxdist = light->maxShadowDistance.getValue();
+  float maxdist = 0.0f;
+  if (cache->light->isOfType(SoShadowDirectionalLight::getClassTypeId()))
+    maxdist = static_cast<SoShadowDirectionalLight*>(light)->maxShadowDistance.getValue();
 
   SbVec3f dir = light->direction.getValue();
   dir.normalize();
@@ -1907,7 +1914,7 @@ SoShadowGroupP::setFragmentShader(SoState * state)
         gen.addMainStatement(str);
       }
 
-      if (dirshadow) {
+      if (dirshadow && light->isOfType(SoShadowDirectionalLight::getClassTypeId())) {
         SoShadowDirectionalLight * sl = static_cast<SoShadowDirectionalLight*> (light);
         if (sl->maxShadowDistance.getValue() > 0.0f) {
           gen.addMainStatement("shadeFactor = 1.0 - shadeFactor;\n");
@@ -2145,12 +2152,15 @@ SoShadowGroupP::setFragmentShader(SoState * state)
   for (i = 0; i < numshadowlights; i++) {
     SoShadowLightCache * cache = this->shadowlights[i];
 
-    if (cache->light->isOfType(SoShadowDirectionalLight::getClassTypeId())) {
+    if (cache->light->isOfType(SoDirectionalLight::getClassTypeId())) {
       SbString str;
-      SoShadowDirectionalLight * sl = static_cast<SoShadowDirectionalLight*> (cache->light);
-      if (sl->maxShadowDistance.getValue() > 0.0f) {
+      SoDirectionalLight * sl = static_cast<SoDirectionalLight*> (cache->light);
+      SoSFFloat *maxShadowDistance = 0;
+      if (cache->light->isOfType(SoShadowDirectionalLight::getClassTypeId()))
+        maxShadowDistance = &static_cast<SoShadowDirectionalLight*>(cache->light)->maxShadowDistance;
+      if (maxShadowDistance && maxShadowDistance->getValue() > 0.0f) {
         SoShaderParameter1f * maxdist = cache->maxshadowdistance;
-        maxdist->value.connectFrom(&sl->maxShadowDistance);
+        maxdist->value.connectFrom(maxShadowDistance);
         str.sprintf("maxshadowdistance%d", i);
         if (maxdist->name.getValue() != str) {
           maxdist->name = str;

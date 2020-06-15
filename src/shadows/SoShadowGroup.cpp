@@ -618,6 +618,7 @@ public:
   SoNode * depthmapscene;
   SoNode * gaussscene;
   SoSceneTexture2 * gaussmap;
+  SbList <float>    gaussweights;
   SoCamera * camera;
   float farval;
   float nearval;
@@ -2416,8 +2417,26 @@ SoShadowGroupP::GLRender(SoGLRenderAction * action, const SbBool inpath)
   state->pop();
 }
 
-static inline float gaussian(int d, double sigma2) {
-    return float((1.0 /  sqrt(2.0 * M_PI * sigma2)) * exp(- double(d*d) / (2.0 * sigma2)));
+static inline int
+binomial(int n, int k)
+{
+  double res = 1;
+  for (int i = 1; i <= k; ++i)
+    res = res * (n - k + i) / i;
+  return (int)(res + 0.01);
+}
+
+static void
+initGaussian(SbList<float> &weights, int size)
+{
+  if (weights.getLength() == size+1) return;
+  assert(size > 0);
+  weights.truncate(0);
+  weights.ensureCapacity(size+1);
+  int n = 2*size + 4;
+  double s = pow(2, n) - (n+1)*2;
+  for (int i=0; i<=size; ++i)
+    weights.append(float(binomial(n, i+2) / s));
 }
 
 SoShaderProgram *
@@ -2431,7 +2450,7 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
   baseimage->name = "baseimage";
   baseimage->value = 0;
 
-  int size = (int(smoothing)+3)/2;
+  int size = int(smoothing);
 
   SoShaderGenerator fgen;
   SbString str;
@@ -2447,8 +2466,6 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
   fgen.addMainStatement("vec4 map;\n");
   fgen.addMainStatement(str);
 
-  double sigma2 = size / 3.0;
-  sigma2 *= sigma2;
   float dt = 1.0f / float(this->depthmap->size.getValue()[0]);
 
   const char *fmt;
@@ -2469,7 +2486,8 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
 #ifdef USE_BOX_FILTER
   float weight = 1.0f/(size*2+1);
 #else
-  float weight = gaussian(0,sigma2);
+  initGaussian(this->gaussweights, size);
+  float weight = this->gaussweights[size];
 #endif
   str.sprintf(fmt, 0.0f);
   fgen.addMainStatement(str);
@@ -2478,7 +2496,7 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
   for (int s = 0; s < size; s++) {
     int d = size-s;
 #ifndef USE_BOX_FILTER
-    weight = gaussian(d, sigma2);
+    weight = this->gaussweights[s];
 #endif
     float offset = float(d)*dt;
     str.sprintf(fmt, offset);
@@ -2622,3 +2640,4 @@ BOOST_AUTO_TEST_CASE(initialized)
 }
 
 #endif // COIN_TEST_SUITE
+// vim: noai:ts=2:sw=2

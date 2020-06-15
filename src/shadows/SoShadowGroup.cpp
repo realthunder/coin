@@ -1360,7 +1360,7 @@ SoShadowGroupP::updateDirectionalCamera(SoState * state, SoShadowLightCache * ca
   }
   cam->viewBoundingBox(isect, 1.0f, 1.0f);
 
-  SbBox3f box = cache->toCameraSpace(worldbox);
+  SbBox3f box = cache->toCameraSpace(isect);
 
   // Bounding box was calculated in camera space, so we need to "flip"
   // the box (because camera is pointing in the (0,0,-1) direction

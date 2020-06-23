@@ -611,7 +611,7 @@ SoShape::shouldGLRender(SoGLRenderAction * action)
       if (nelem->getNum() == 0) {
         glPushAttrib(GL_LIGHTING_BIT);
         glDisable(GL_LIGHTING);
-        arrays &= SoPrimitiveVertexCache::NORMAL;
+        arrays &= ~SoPrimitiveVertexCache::NORMAL;
       }
       PRIVATE(this)->pvcache->renderLines(state, arrays);
       PRIVATE(this)->pvcache->renderPoints(state, arrays);

@@ -405,12 +405,17 @@ public:
     return q > 0.5f;
   }
 
+  void setDepthBuffer(SoState *state, unsigned int buffer, SbBool clear);
+
 #ifdef COIN_THREADSAFE
   SbMutex mutex;
 #endif // COIN_THREADSAFE
   SbBool canrendertotexture;
   unsigned char * offscreenbuffer;
   int offscreenbuffersize;
+  GLuint extDepthBuffer;
+  SbBool depthClear;
+  GLint depthFunc;
 };
 
 // *************************************************************************
@@ -521,6 +526,45 @@ SoSceneTexture2::~SoSceneTexture2(void)
   delete PRIVATE(this);
 }
 
+/*!
+  Allow setting an external depth buffer (e.g. obtained from another
+  SoSceneTexture2::getDepthBuffer()).
+
+  Pass \a buffer = GL_INVALID_VALID to force use an internal created depth
+  buffer.
+
+  Use \a clear to control whether to perform depth clear before scene
+  rendering. This works regardless if the depth buffer is external or internal.
+*/
+void
+SoSceneTexture2::setDepthBuffer(SoState *state, unsigned int buffer, SbBool clear)
+{
+  LOCK_GLIMAGE(this);
+  PRIVATE(this)->setDepthBuffer(state, buffer, clear);
+  UNLOCK_GLIMAGE(this);
+}
+
+/*!
+  Set the depth comparing function used when creating a depth texture.
+ */
+void
+SoSceneTexture2::setDepthFunc(int func)
+{
+  // TODO: this function should have been a field. The function is used instead
+  // of keep binary compatibility.
+  PRIVATE(this)->depthFunc = func;
+}
+
+/*!
+  Obtain the internal depth buffer
+*/
+unsigned int
+SoSceneTexture2::getDepthBuffer() const
+{
+  if (PRIVATE(this)->fbodata)
+    return PRIVATE(this)->fbodata->fbo_depthBuffer;
+  return GL_INVALID_VALUE;
+}
 
 // Documented in superclass.
 void
@@ -695,6 +739,9 @@ SoSceneTexture2P::SoSceneTexture2P(SoSceneTexture2 * apiptr)
   this->canrendertotexture = FALSE;
   this->contextid = -1;
   this->fbodata = NULL;
+  this->extDepthBuffer = GL_INVALID_VALUE;
+  this->depthClear = TRUE;
+  this->depthFunc = GL_LEQUAL;
 }
 
 SoSceneTexture2P::~SoSceneTexture2P()
@@ -850,7 +897,10 @@ SoSceneTexture2P::updateFrameBuffer(SoState * state, const float COIN_UNUSED_ARG
   SoViewportRegionElement::set(state, SbViewportRegion(fbodata->fbo_size));
   SbVec4f col = PUBLIC(this)->backgroundColor.getValue();
   glClearColor(col[0], col[1], col[2], col[3]);
-  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+  if (this->depthClear)
+    glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+  else
+    glClear(GL_COLOR_BUFFER_BIT);
 
   SoGLRenderAction * glaction = (SoGLRenderAction*) state->getAction();
   // traverse the new scene graph
@@ -1162,7 +1212,12 @@ SoSceneTexture2P::createFramebufferObjects(const cc_glglue * glue, SoState * sta
   glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &oldfb );
 
   cc_glglue_glGenFramebuffers(glue, 1, &fbodata->fbo_frameBuffer);
-  cc_glglue_glGenRenderbuffers(glue, 1, &fbodata->fbo_depthBuffer);
+
+  if (this->extDepthBuffer != GL_INVALID_VALUE)
+    fbodata->fbo_depthBuffer = this->extDepthBuffer;
+  else
+    cc_glglue_glGenRenderbuffers(glue, 1, &fbodata->fbo_depthBuffer);
+
   cc_glglue_glBindFramebuffer(glue, GL_FRAMEBUFFER_EXT, fbodata->fbo_frameBuffer);
 
   fbodata->fbo_texture = new SoGLDisplayList(state, SoGLDisplayList::TEXTURE_OBJECT);
@@ -1244,7 +1299,7 @@ SoSceneTexture2P::createFramebufferObjects(const cc_glglue * glue, SoState * sta
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, this->depthFunc);
 
     if (SoGLDriverDatabase::isSupported(glue, SO_GL_ANISOTROPIC_FILTERING)) {
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
@@ -1301,15 +1356,14 @@ SoSceneTexture2P::deleteFrameBufferObjects(const cc_glglue * glue, SoState * sta
       cc_glglue_glDeleteFramebuffers(glue, 1, &fbodata->fbo_frameBuffer);
       fbodata->fbo_frameBuffer = GL_INVALID_VALUE;
     }
-    if (fbodata->fbo_depthBuffer != GL_INVALID_VALUE) {
+    if (fbodata->fbo_depthBuffer != this->extDepthBuffer)
       cc_glglue_glDeleteRenderbuffers(glue, 1, &fbodata->fbo_depthBuffer);
-      fbodata->fbo_depthBuffer = GL_INVALID_VALUE;
-    }
   }
   else {
     fbo_deletedata * dd = new fbo_deletedata;
     dd->frameBuffer = fbodata->fbo_frameBuffer;
-    dd->depthBuffer = fbodata->fbo_depthBuffer;
+    dd->depthBuffer = fbodata->fbo_depthBuffer != this->extDepthBuffer ? 
+                                              fbodata->fbo_depthBuffer : GL_INVALID_VALUE;
     SoGLCacheContextElement::scheduleDeleteCallback(fbodata->cachecontext,
                                                     fbo_delete_cb, dd);
   }
@@ -1371,6 +1425,62 @@ SoSceneTexture2P::getTransparencyType(SoState * state)
     SoShapeStyleElement::getTransparencyType(state);
 }
 
+void
+SoSceneTexture2P::setDepthBuffer(SoState *state, unsigned int buffer, SbBool clear)
+{
+  if (this->extDepthBuffer == buffer) {
+    this->depthClear = clear;
+    return;
+  }
+
+  if (!state || !this->fbodata) {
+    this->deleteFrameBufferObjects(NULL, NULL);
+
+    this->extDepthBuffer = buffer;
+    this->depthClear = clear;
+
+    this->glimagevalid = FALSE;
+    this->buffervalid = FALSE;
+    // this will force the pbuffers and/or framebuffers to be recreated
+    this->glcontextsize = SbVec2s(-1, -1);
+    if (this->fbodata)
+      this->fbodata->fbo_size = SbVec2s(-1, -1);
+    return;
+  }
+
+  int cachecontext = SoGLCacheContextElement::get(state);
+  const cc_glglue * glue = cc_glglue_instance(cachecontext);
+
+  // store current framebuffer
+  GLint oldfb;
+  glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &oldfb );
+
+  cc_glglue_glBindFramebuffer(glue, GL_FRAMEBUFFER_EXT, fbodata->fbo_frameBuffer);
+
+  if (this->fbodata->fbo_depthBuffer != this->extDepthBuffer)
+    cc_glglue_glDeleteRenderbuffers(glue, 1, &this->fbodata->fbo_depthBuffer);
+
+  this->extDepthBuffer = buffer;
+  this->depthClear = clear;
+
+  if (buffer != GL_INVALID_VALUE) 
+    this->fbodata->fbo_depthBuffer = buffer;
+  else {
+    // create the render buffer
+    cc_glglue_glGenRenderbuffers(glue, 1, &this->fbodata->fbo_depthBuffer);
+    cc_glglue_glBindRenderbuffer(glue, GL_RENDERBUFFER_EXT, fbodata->fbo_depthBuffer);
+    cc_glglue_glRenderbufferStorage(glue, GL_RENDERBUFFER_EXT,
+                                    GL_DEPTH_COMPONENT24,
+                                    this->fbodata->fbo_size[0], this->fbodata->fbo_size[1]);
+  }
+  // attach renderbuffer to framebuffer
+  cc_glglue_glFramebufferRenderbuffer(glue,
+                                      GL_FRAMEBUFFER_EXT,
+                                      GL_DEPTH_ATTACHMENT_EXT,
+                                      GL_RENDERBUFFER_EXT,
+                                      this->fbodata->fbo_depthBuffer);
+  cc_glglue_glBindFramebuffer(glue, GL_FRAMEBUFFER_EXT, (GLuint)oldfb);
+}
 
 #undef PUBLIC
 
@@ -1378,3 +1488,4 @@ SoSceneTexture2P::getTransparencyType(SoState * state)
 #undef UNLOCK_GLIMAGE
 
 // **************************************************************
+// vim: noai:ts=2:sw=2

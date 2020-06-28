@@ -61,6 +61,12 @@ public:
     PROJECTED_BBOX_DEPTH_FACTOR
   };
 
+  // Bit flags for isActive. This is a hack to enable new shadow feature
+  // without breaking binary compatibility
+  enum ActiveFlag {
+    TRANSPARENT_SHADOW = 2,
+  };
+
   SoSFBool isActive;
   SoSFFloat intensity;
   SoSFFloat precision;
@@ -87,6 +93,7 @@ protected:
 private:
   SoShadowGroupP * pimpl;
 
+  friend class SoShadowGroupP;
 };
 
 #endif // COIN_SOSHADOWGROUP_H

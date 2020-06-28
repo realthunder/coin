@@ -473,6 +473,18 @@ SoShapeStyleElement::setShadowMapRendering(SoState * state, const SbBool value)
   }
 }
 
+void
+SoShapeStyleElement::setTransparentShadowMap(SoState * state, const SbBool value)
+{
+  SoShapeStyleElement * elem = getElement(state);
+  if (value) {
+    elem->flags |= TRANSP_SHADOW;
+  }
+  else {
+    elem->flags &= ~TRANSP_SHADOW;
+  }
+}
+
 /*!
   Sets whether we are rendering with shadows or not.
 

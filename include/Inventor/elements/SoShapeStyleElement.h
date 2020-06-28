@@ -63,7 +63,8 @@ public:
     TRANSP_MATERIAL         = 0x00100000,
     TRANSP_SORTED_TRIANGLES = 0x00200000,
     SHADOWMAP               = 0x00400000,
-    SHADOWS                 = 0x00800000
+    SHADOWS                 = 0x00800000,
+    TRANSP_SHADOW           = 0x01000000,
   };
   
   virtual void init(SoState * state);
@@ -106,6 +107,7 @@ public:
   static void setTransparentTexture(SoState * state, const SbBool value);
 
   static void setShadowMapRendering(SoState * state, const SbBool value);
+  static void setTransparentShadowMap(SoState * state, const SbBool value);
   static void setShadowsRendering(SoState * state, const SbBool value);
 
 private:

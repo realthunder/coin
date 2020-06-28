@@ -135,6 +135,9 @@ public:
   SbBool isRenderingTranspPaths(void) const;
   SbBool isRenderingTranspBackfaces(void) const;
 
+  SbBool hasTransparentShadowObject() const;
+  void resetTransparentShadowObject();
+
 protected:
   friend class SoGLRenderActionP; // calls beginTraversal
   virtual void beginTraversal(SoNode * node);

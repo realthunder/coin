@@ -594,6 +594,8 @@ public:
   SoGLSortedObjectOrderCB * sortedobjectcb;
   void * sortedobjectclosure;
 
+  SbBool hasTransparentShadowObject;
+
   void setupSortedLayersBlendTextures(const SoState * state);
   void doSortedLayersBlendRendering(const SoState * state, SoNode * node);
   void initSortedLayersBlendRendering(const SoState * state);
@@ -739,6 +741,8 @@ SoGLRenderAction::SoGLRenderAction(const SbViewportRegion & viewportregion)
   PRIVATE(this)->sortedobjectstrategy = BBOX_CENTER;
   PRIVATE(this)->sortedobjectcb = NULL;
   PRIVATE(this)->sortedobjectclosure = NULL;
+
+  PRIVATE(this)->hasTransparentShadowObject = FALSE;
 }
 
 /*!
@@ -746,6 +750,22 @@ SoGLRenderAction::SoGLRenderAction(const SbViewportRegion & viewportregion)
 */
 SoGLRenderAction::~SoGLRenderAction()
 {
+}
+
+/*!
+  Internal use by SoShadowGroup to check if it needs an extra pass for
+  rendering transparent shadows
+*/
+SbBool
+SoGLRenderAction::hasTransparentShadowObject() const
+{
+  return PRIVATE(this)->hasTransparentShadowObject;
+}
+
+void
+SoGLRenderAction::resetTransparentShadowObject()
+{
+  PRIVATE(this)->hasTransparentShadowObject = FALSE;
 }
 
 /*!
@@ -1214,6 +1234,60 @@ SoGLRenderAction::handleTransparency(SbBool istransparent)
     SoShapeStyleElement::getTransparencyType(thestate)
     );
 
+  const SoShapeStyleElement * shapestyle = SoShapeStyleElement::get(state);
+  unsigned int shapestyleflags = shapestyle->getFlags();
+
+  if (shapestyleflags & SoShapeStyleElement::SHADOWMAP) {
+    SbBool transp_shadow = (shapestyleflags & SoShapeStyleElement::TRANSP_SHADOW) != 0;
+    if (!transp_shadow) {
+      if (istransparent) {
+        // This is to inform SoShadowGroup for an extra pass to render transparent shadow
+        PRIVATE(this)->hasTransparentShadowObject = TRUE;
+        return TRUE;
+      }
+    }
+    else {
+
+      if (!istransparent) return TRUE;
+
+      // Translate the transparent type, no delay rendering
+      switch (transptype) {
+      case SoGLRenderAction::ADD:
+      case SoGLRenderAction::BLEND:
+      case SoGLRenderAction::NONE:
+      case SoGLRenderAction::SCREEN_DOOR:
+        break;
+      default:
+        SoCacheElement::setInvalid(TRUE);
+        if (thestate->isCacheOpen()) {
+          SoCacheElement::invalidate(thestate);
+        }
+        switch (transptype) {
+        case SoGLRenderAction::DELAYED_ADD:
+        case SoGLRenderAction::SORTED_OBJECT_ADD:
+        case SoGLRenderAction::SORTED_OBJECT_SORTED_TRIANGLE_ADD:
+          transptype = SoGLRenderAction::ADD;
+          break;
+        default:
+          transptype = SoGLRenderAction::BLEND;
+        }
+      }
+
+      switch(transptype) {
+      case SoGLRenderAction::ADD:
+        SoLazyElement::enableBlending(thestate, GL_SRC_ALPHA, GL_ONE);
+        break;
+      case SoGLRenderAction::BLEND:
+        SoLazyElement::enableBlending(thestate, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+      default:
+        SoLazyElement::disableBlending(thestate);
+      }
+
+      // Return false to ask for immediate rendering
+      return FALSE;
+    }
+  }
 
   if (PRIVATE(this)->transparencytype == SORTED_LAYERS_BLEND) {
 
@@ -2682,3 +2756,4 @@ SoGLRenderActionP::renderSortedLayersNV(const SoState * state)
 // *************************************************************************
 
 #undef PRIVATE
+// vim: noai:ts=2:sw=2

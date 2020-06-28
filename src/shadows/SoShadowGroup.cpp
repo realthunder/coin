@@ -295,7 +295,9 @@
 #include <Inventor/nodes/SoCallback.h>
 #include <Inventor/nodes/SoClipPlane.h>
 #include <Inventor/nodes/SoInfo.h>
+#include <Inventor/nodes/SoDepthBuffer.h>
 #include <Inventor/elements/SoShapeStyleElement.h>
+#include <Inventor/elements/SoDepthBufferElement.h>
 #include <Inventor/elements/SoLightElement.h>
 #include <Inventor/elements/SoMultiTextureMatrixElement.h>
 #include <Inventor/elements/SoModelMatrixElement.h>
@@ -380,20 +382,36 @@ public:
     }
     const int TEXSIZE = coin_geq_power_of_two((int) (sg->precision.getValue() * SbMin(maxsize, maxtexsize)));
 
+    this->master = sg;
+    this->alphamap = NULL;
+    this->alphadepthmap = NULL;
+
     this->lightid = -1;
-    this->vsm_program = NULL;
     this->vsm_farval = NULL;
     this->vsm_nearval = NULL;
     this->gaussmap = NULL;
-    this->gaussscene = NULL;
+    this->gaussalphamap = NULL;
+    this->gaussdepthsceneH = NULL;
+    this->gaussdepthsceneV = NULL;
+    this->gaussalphasceneH = NULL;
+    this->gaussalphasceneV = NULL;
     this->smoothing = 0.0f;
-    this->depthmapid = 0;
+    this->depthnodeid = 0;
+    this->alphanodeid = 0;
     this->texunit = -1;
+    this->depthtest = NULL;
+
     this->bboxnode = new SoSeparator;
     this->bboxnode->ref();
 
     this->shadowmapid = new SoShaderParameter1i;
     this->shadowmapid->ref();
+
+    this->alphamapid = new SoShaderParameter1i;
+    this->alphamapid->ref();
+
+    this->alphadepthmapid = new SoShaderParameter1i;
+    this->alphadepthmapid->ref();
 
     this->fragment_farval = new SoShaderParameter1f;
     this->fragment_farval->ref();
@@ -420,7 +438,8 @@ public:
     this->light = (SoLight*)((SoFullPath*)path)->getTail();
     this->light->ref();
 
-    this->createVSMProgram();
+    this->hastransp = FALSE;
+
     this->depthmap = new SoSceneTexture2;
     this->depthmap->ref();
     this->depthmap->transparencyFunction = SoSceneTexture2::NONE;
@@ -428,13 +447,9 @@ public:
     this->depthmap->wrapS = SoSceneTexture2::CLAMP_TO_BORDER;
     this->depthmap->wrapT = SoSceneTexture2::CLAMP_TO_BORDER;
 
-    if (this->vsm_program) {
-      this->depthmap->type = SoSceneTexture2::RGBA32F;
-      this->depthmap->backgroundColor = SbVec4f(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-    else {
-      this->depthmap->type = SoSceneTexture2::DEPTH;
-    }
+    this->depthmap->type = SoSceneTexture2::RGBA32F;
+    this->depthmap->backgroundColor = SbVec4f(1.0f, 1.0f, 1.0f, 1.0f);
+
     SoTransparencyType * tt = new SoTransparencyType;
     tt->value = SoTransparencyType::NONE;
 
@@ -456,9 +471,17 @@ public:
     cb->setCallback(shadowmap_glcallback, this);
 
     sep->addChild(cb);
-    if (this->vsm_program) sep->addChild(this->vsm_program);
 
-    if (scene->isOfType(SoShadowGroup::getClassTypeId())) {
+    sep->addChild(this->createVSMProgram());
+
+    if (scene == sg)
+      this->scene = NULL;
+    else {
+      this->scene = scene;
+      this->scene->ref();
+    }
+
+    if (scene == sg) {
       SoShadowGroup * g = (SoShadowGroup*) scene;
       for (int i = 0; i < g->getNumChildren(); i++) {
         sep->addChild(g->getChild(i));
@@ -489,24 +512,117 @@ public:
   }
 
   ~SoShadowLightCache() {
+    if (this->scene) this->scene->unref();
     if (this->depthmapscene) this->depthmapscene->unref();
-    if (this->gaussscene) this->gaussscene->unref();
+    if (this->gaussdepthsceneH) this->gaussdepthsceneH->unref();
+    if (this->gaussdepthsceneV) this->gaussdepthsceneV->unref();
+    if (this->gaussalphasceneH) this->gaussalphasceneH->unref();
+    if (this->gaussalphasceneV) this->gaussalphasceneV->unref();
+    if (this->depthtest) this->depthtest->unref();
     if (this->bboxnode) this->bboxnode->ref();
     if (this->maxshadowdistance) this->maxshadowdistance->unref();
     if (this->dropoffrate) this->dropoffrate->unref();
     if (this->coscutoff) this->coscutoff->unref();
-    if (this->vsm_program) this->vsm_program->unref();
     if (this->vsm_farval) this->vsm_farval->unref();
     if (this->vsm_nearval) this->vsm_nearval->unref();
     if (this->fragment_farval) this->fragment_farval->unref();
     if (this->shadowmapid) this->shadowmapid->unref();
+    if (this->alphamapid) this->alphamapid->unref();
+    if (this->alphadepthmapid) this->alphadepthmapid->unref();
     if (this->fragment_nearval) this->fragment_nearval->unref();
     if (this->fragment_lightplane) this->fragment_lightplane->unref();
     if (this->light) this->light->unref();
     if (this->path) this->path->unref();
     if (this->gaussmap) this->gaussmap->unref();
+    if (this->gaussalphamap) this->gaussalphamap->unref();
     if (this->depthmap) this->depthmap->unref();
     if (this->camera) this->camera->unref();
+    if (this->alphamap) this->alphamap->unref();
+    if (this->alphadepthmap) this->alphadepthmap->unref();
+  }
+
+  void createAlphaMap()
+  {
+    assert(this->alphamap == NULL);
+    this->alphamap = new SoSceneTexture2;
+    this->alphamap->ref();
+    this->alphamap->transparencyFunction = SoSceneTexture2::NONE;
+    this->alphamap->size = this->depthmap->size;
+    this->alphamap->wrapS = SoSceneTexture2::CLAMP_TO_BORDER;
+    this->alphamap->wrapT = SoSceneTexture2::CLAMP_TO_BORDER;
+
+    this->alphamap->type = SoSceneTexture2::RGBA8;
+    this->alphamap->backgroundColor = SbVec4f(1.0f, 1.0f, 1.0f, 0.0f);
+
+    SoTransparencyType * tt = new SoTransparencyType;
+    tt->value = SoTransparencyType::BLEND;
+
+    this->alphamap->sceneTransparencyType = tt;
+
+    SoSeparator * sep = new SoSeparator;
+    sep->addChild(this->camera);
+
+    SoCallback * cb = new SoCallback;
+    cb->setCallback(alphamap_glcallback, this);
+
+    sep->addChild(cb);
+    // sep->addChild(this->createAlphaProgram());
+
+    if (this->scene)
+      sep->addChild(this->scene);
+    else {
+      for (int i = 0; i < this->master->getNumChildren(); i++) {
+        sep->addChild(this->master->getChild(i));
+      }
+    }
+
+    this->alphamap->scene = sep;
+
+    if(this->gaussalphamap) {
+      this->gaussalphasceneH = this->createGaussScene(smoothing, true, this->alphamap, true);
+      this->gaussalphasceneH->ref();
+      this->gaussalphasceneV = this->createGaussScene(smoothing, false, this->gaussalphamap, true);
+      this->gaussalphasceneV->ref();
+    }
+
+    createAlphaDepthMap();
+  }
+
+  void createAlphaDepthMap()
+  {
+    assert(this->alphadepthmap == NULL);
+    this->alphadepthmap = new SoSceneTexture2;
+    this->alphadepthmap->ref();
+    this->alphadepthmap->transparencyFunction = SoSceneTexture2::NONE;
+    this->alphadepthmap->size = this->depthmap->size;
+    this->alphadepthmap->wrapS = SoSceneTexture2::CLAMP_TO_BORDER;
+    this->alphadepthmap->wrapT = SoSceneTexture2::CLAMP_TO_BORDER;
+
+    this->alphadepthmap->type = SoSceneTexture2::DEPTH;
+    this->alphadepthmap->setDepthFunc(GL_LESS);
+
+    SoTransparencyType * tt = new SoTransparencyType;
+    tt->value = SoTransparencyType::NONE;
+
+    this->alphadepthmap->sceneTransparencyType = tt;
+
+    SoSeparator * sep = new SoSeparator;
+    sep->addChild(this->camera);
+
+    SoCallback * cb = new SoCallback;
+    cb->setCallback(alphadepthmap_glcallback, this);
+
+    sep->addChild(cb);
+
+    if (this->scene)
+      sep->addChild(this->scene);
+    else {
+      for (int i = 0; i < this->master->getNumChildren(); i++) {
+        sep->addChild(this->master->getChild(i));
+      }
+    }
+
+    this->alphadepthmap->scene = sep;
   }
 
   void updateGaussMap(float smoothing)
@@ -517,6 +633,26 @@ public:
     if (this->gaussmap) {
       this->gaussmap->unref();
       this->gaussmap = NULL;
+    }
+    if (this->gaussalphamap) {
+      this->gaussalphamap->unref();
+      this->gaussalphamap = NULL;
+    }
+    if (this->gaussdepthsceneH) {
+      this->gaussdepthsceneH->unref();
+      this->gaussdepthsceneH = NULL;
+    }
+    if (this->gaussdepthsceneV) {
+      this->gaussdepthsceneV->unref();
+      this->gaussdepthsceneV = NULL;
+    }
+    if (this->gaussalphasceneH) {
+      this->gaussalphasceneH->unref();
+      this->gaussalphasceneH = NULL;
+    }
+    if (this->gaussalphasceneV) {
+      this->gaussalphasceneV->unref();
+      this->gaussalphasceneV = NULL;
     }
     if (smoothing > 0.0f) {
       this->gaussmap = new SoSceneTexture2;
@@ -530,13 +666,75 @@ public:
       tt->value = SoTransparencyType::NONE;
       this->gaussmap->sceneTransparencyType = tt;
 
-      this->gaussmap->type = SoSceneTexture2::RGBA32F;
-      this->gaussmap->backgroundColor = SbVec4f(1.0f, 1.0f, 1.0f, 1.0f);
+      this->gaussmap->type = this->depthmap->type;
 
-      this->gaussmap->scene = this->createGaussSG(smoothing, true, this->depthmap);
-      this->gaussscene = this->createGaussSG(smoothing, false, this->gaussmap);
-      this->gaussscene->ref();
+      this->gaussdepthsceneH = this->createGaussScene(smoothing, true, this->depthmap, false);
+      this->gaussdepthsceneH->ref();
+      this->gaussdepthsceneV = this->createGaussScene(smoothing, false, this->gaussmap, false);
+      this->gaussdepthsceneV->ref();
+
+      if(this->alphamap) {
+        this->gaussalphamap = new SoSceneTexture2;
+        this->gaussalphamap->ref();
+        this->gaussalphamap->transparencyFunction = SoSceneTexture2::NONE;
+        this->gaussalphamap->size = this->depthmap->size.getValue();
+        this->gaussalphamap->wrapS = SoSceneTexture2::CLAMP_TO_BORDER;
+        this->gaussalphamap->wrapT = SoSceneTexture2::CLAMP_TO_BORDER;
+
+        SoTransparencyType * tt = new SoTransparencyType;
+        tt->value = SoTransparencyType::NONE;
+        this->gaussalphamap->sceneTransparencyType = tt;
+
+        this->gaussalphamap->type = this->alphamap->type;
+
+        this->gaussalphasceneH = this->createGaussScene(smoothing, true, this->alphamap, true);
+        this->gaussalphasceneH->ref();
+        this->gaussalphasceneV = this->createGaussScene(smoothing, false, this->gaussalphamap, true);
+        this->gaussalphasceneV->ref();
+      }
     }
+  }
+
+  void gaussFilter(SoGLRenderAction *action, bool transpShadow)
+  {
+    SoSceneTexture2 *filter;
+    SoSceneTexture2 *input;
+    SoNode *scene;
+
+    if (transpShadow) {
+      filter = this->gaussalphamap;
+      if (!filter) return;
+      filter->backgroundColor = SbVec4f(1.0f, 1.0f, 1.0f, 1.0f);
+      input = this->alphamap;
+      filter->scene = this->gaussalphasceneH;
+      scene = this->gaussalphasceneV;
+    } else {
+      filter = this->gaussmap;
+      if (!filter) return;
+      filter->backgroundColor = SbVec4f(1.0f, 1.0f, 1.0f, 1.0f);
+      input = this->depthmap;
+      filter->scene = this->gaussdepthsceneH;
+      scene = this->gaussdepthsceneV;
+    }
+
+    // Two pass gauss filter
+
+    // First pass, output to gaussmap
+    filter->GLRender(action);
+
+    // Second pass, use gaussmap as input and original input as output
+    input->enableNotify(FALSE);
+    SoNode *inputscene = input->scene.getValue();
+    inputscene->ref();
+    input->scene = scene;
+    input->GLRender(action);
+
+    // Now disable notifying, and restore input's original scene
+    input->scene.enableNotify(FALSE);
+    input->scene = inputscene;
+    inputscene->unref();
+    input->scene.enableNotify(TRUE);
+    input->enableNotify(TRUE);
   }
 
   static int
@@ -607,29 +805,45 @@ public:
   SbBox3f toCameraSpace(const SbXfBox3f & worldbox) const;
   static void shadowmap_glcallback(void * closure, SoAction * action);
   static void shadowmap_post_glcallback(void * closure, SoAction * action);
-  void createVSMProgram(void);
-  SoShaderProgram * createGaussFilter(float smoothing, bool horizontal);
-  SoSeparator * createGaussSG(float smoothing, bool horizontal, SoSceneTexture2 * tex);
+  static void alphamap_glcallback(void * closure, SoAction * action);
+  static void alphadepthmap_glcallback(void * closure, SoAction * action);
+  SoShaderProgram * createVSMProgram();
+  SoShaderProgram * createAlphaProgram();
+  SoShaderProgram * createGaussFilter(float smoothing, bool horizontal, bool transp);
+  SoSeparator * createGaussScene(float smoothing, bool horizontal, SoSceneTexture2 * tex, bool transp);
 
+  SoShadowGroup *master;
   SbMatrix matrix;
   SoPath * path;
   SoLight * light;
+  SoNode *scene;
   SoSceneTexture2 * depthmap;
+  SoSceneTexture2 * alphamap;
+  SoSceneTexture2 * alphadepthmap;
+  SbBool hastransp;
   SoNode * depthmapscene;
-  SoNode * gaussscene;
+  SoNode * gaussdepthsceneH;
+  SoNode * gaussdepthsceneV;
+  SoNode * gaussalphasceneH;
+  SoNode * gaussalphasceneV;
+  SoDepthBuffer *depthtest;
   SoSceneTexture2 * gaussmap;
+  SoSceneTexture2 * gaussalphamap;
   SbList <float>    gaussweights;
   SoCamera * camera;
   float farval;
   float nearval;
   int texunit;
   int lightid;
-  SbUniqueId depthmapid;
+  SbUniqueId depthnodeid;
+  SbUniqueId alphanodeid;
   float smoothing;
 
   SoSeparator * bboxnode;
   SoShaderProgram * vsm_program;
   SoShaderParameter1i * shadowmapid;
+  SoShaderParameter1i * alphamapid;
+  SoShaderParameter1i * alphadepthmapid;
   SoShaderParameter1f * vsm_farval;
   SoShaderParameter1f * vsm_nearval;
   SoShaderParameter1f * fragment_farval;
@@ -640,9 +854,6 @@ public:
   SoShaderParameter1f * maxshadowdistance;
   SoShaderParameter1f * dropoffrate;
   SoShaderParameter1f * coscutoff;
-
-  SoColorPacker colorpacker;
-  SbColor color;
 };
 
 class SoShadowGroupP {
@@ -698,7 +909,10 @@ public:
     this->deleteShadowLights();
   }
 
-  SoShaderProgram * createVSMProgram(void);
+  SbBool transparentShadow() const
+  {
+    return this->master->isActive.getValue() & SoShadowGroup::TRANSPARENT_SHADOW;
+  }
 
   void clearLightPaths(void) {
     for (int i = 0; i < this->lightpaths.getLength(); i++) {
@@ -806,9 +1020,9 @@ SO_NODE_SOURCE(SoShadowGroup);
 */
 SoShadowGroup::SoShadowGroup(void)
 {
-  PRIVATE(this) = new SoShadowGroupP(this);
-
   SO_NODE_INTERNAL_CONSTRUCTOR(SoShadowGroup);
+
+  PRIVATE(this) = new SoShadowGroupP(this);
 
   SO_NODE_ADD_FIELD(isActive, (TRUE));
   SO_NODE_ADD_FIELD(intensity, (0.5f));
@@ -953,7 +1167,8 @@ SoShadowGroup::notify(SoNotList * nl)
       }
     }
   }
-  else if (nl->getLastField() == &this->precision)
+  else if (nl->getLastField() == &this->precision
+          || nl->getLastField() == &this->isActive)
     PRIVATE(this)->deleteShadowLights();
 
   if (PRIVATE(this)->vertexshadercache) {
@@ -1088,15 +1303,16 @@ SoShadowGroupP::updateShadowLights(SoGLRenderAction * action)
         }
       }
     }
-    // validate if spot light paths are still valid
+    int unit_scale = transparentShadow() ? 3 : 1;
     int i2 = 0;
     int id = lightidoffset;
+    // validate if spot light paths are still valid
     for (i = 0; i < pl.getLength(); i++) {
       SoPath * path = pl[i];
       SoLight * light = (SoLight*) ((SoFullPath*)path)->getTail();
       if (light->on.getValue() && (i2 < maxlights)) {
         SoShadowLightCache * cache = this->shadowlights[i2];
-        int unit = (maxunits - 1) - i2;
+        int unit = (maxunits - 1) - i2 * unit_scale;
         int lightid = id++;
         if (unit != cache->texunit || lightid != cache->lightid) {
           if (this->vertexshadercache) this->vertexshadercache->invalidate();
@@ -1131,11 +1347,6 @@ SoShadowGroupP::updateShadowLights(SoGLRenderAction * action)
     assert(cache->texunit >= 0);
     assert(cache->lightid >= 0);
     SoTextureUnitElement::set(state, PUBLIC(this), cache->texunit);
-
-    SbMatrix mat = cache->matrix;
-
-    assert(cache->texunit >= 0);
-
     SoMultiTextureMatrixElement::set(state, PUBLIC(this), cache->texunit, cache->matrix);
     this->renderDepthMap(cache, action);
     SoGLMultiTextureEnabledElement::set(state, PUBLIC(this), cache->texunit,
@@ -1199,7 +1410,7 @@ SoShadowGroupP::updateSpotCamera(SoState * COIN_UNUSED_ARG(state), SoShadowLight
   // A far plane that is too far would result a low quanlity shadow, but beats
   // no shadow at all times.
   //
-  // the maximum heightAngle we can render with a camera is < PI/2,.
+  // Old remarks: the maximum heightAngle we can render with a camera is < PI/2,.
   // The max cutoff is therefore PI/4. Some slack is needed, and 0.78
   // is about the maximum angle we can do.
   // if (cutoff > 0.78f) cutoff = 0.78f;
@@ -1401,20 +1612,83 @@ void
 SoShadowGroupP::renderDepthMap(SoShadowLightCache * cache,
                                SoGLRenderAction * action)
 {
+  SoState *state = action->getState();
+
+  // Make sure the depth buffer inside is cleared before rendering
+  cache->depthmap->setDepthBuffer(state, GL_INVALID_VALUE, TRUE);
+
   cache->depthmap->GLRender(action);
-  if (cache->depthmap->scene.getValue() == cache->depthmapscene
-          && cache->gaussmap
-          && cache->depthmap->getNodeId() != cache->depthmapid) {
-    cache->gaussmap->GLRender(action);
-    cache->depthmap->enableNotify(FALSE);
-    cache->depthmap->scene = cache->gaussscene;
-    cache->depthmap->GLRender(action);
-    cache->depthmap->scene.enableNotify(FALSE);
-    cache->depthmap->scene = cache->depthmapscene;
-    cache->depthmap->scene.enableNotify(TRUE);
-    cache->depthmap->enableNotify(TRUE);
-    cache->depthmapid = cache->depthmap->getNodeId();
+
+  // Prevent depth buffer clearing, because the same depthmap will
+  // be used for gauss filtering. We need to keep the depth buffer
+  // to be reused for alphamap (i.e. transparent shadow) rendering.
+  cache->depthmap->setDepthBuffer(state, GL_INVALID_VALUE, FALSE);
+
+  if (cache->depthmap->scene.getValue() != cache->depthmapscene)
+    return;
+
+  bool redraw = false;
+  if(cache->depthmap->getNodeId() != cache->depthnodeid) {
+    cache->gaussFilter(action, false);
+    cache->depthnodeid = cache->depthmap->getNodeId();
+    redraw = true;
   }
+
+  if (!this->transparentShadow() || !cache->hastransp) {
+    if (cache->alphamap) {
+      cache->alphamap->unref();
+      cache->alphamap = NULL;
+    }
+    return;
+  }
+
+  if (!cache->alphamap) {
+    redraw = true;
+    cache->createAlphaMap();
+  }
+
+  // Transparent shadow map is stored using two extra textures.
+  //
+  // One RGBA8 color texutre (alphamap) is generated by rendering the scene
+  // with only transparent objects, using the depth buffer of the previous
+  // opaque object only rendering pass (depthmap), with alpha blending and
+  // depth write disabled. This is for cases where there is an oqapue objects
+  // inbetween two transparent objects, the lower transparent object can be
+  // correctly occluded.
+  //
+  // The other depth texture (alphadepthmap) is generated by a second pass
+  // rendering of transparent objects only. This is to prevent casting upper
+  // transparent object shadows from lower transparent object.
+  //
+  // When rendering transparent shadow, consult alphamap only if the fragment
+  // is not under opaque shadow. When casting on an opaque objects, simply
+  // multiply the shade color with the color in the alphamap. When casting on
+  // a transparent object, only multiply if the object pass the depth test
+  // against alphadepthmap.
+
+  SoTextureUnitElement::set(state, PUBLIC(this), cache->texunit-1);
+  SoMultiTextureMatrixElement::set(state, PUBLIC(this), cache->texunit-1, cache->matrix);
+
+  if(!redraw && cache->alphamap->getNodeId() == cache->alphanodeid
+             && cache->depthmap->getDepthBuffer() == cache->alphamap->getDepthBuffer())
+    cache->alphamap->GLRender(action);
+  else {
+    cache->alphamap->setDepthBuffer(state, cache->depthmap->getDepthBuffer(), FALSE);
+    cache->alphamap->GLRender(action);
+    cache->gaussFilter(action, true);
+    cache->alphanodeid = cache->alphamap->getNodeId();
+  }
+
+  SoTextureUnitElement::set(state, PUBLIC(this), cache->texunit-2);
+  SoMultiTextureMatrixElement::set(state, PUBLIC(this), cache->texunit-2, cache->matrix);
+
+  cache->alphadepthmap->GLRender(action);
+
+  SoGLMultiTextureEnabledElement::set(state, PUBLIC(this), cache->texunit-2,
+                                      SoGLMultiTextureEnabledElement::DISABLED);
+
+  SoGLMultiTextureEnabledElement::set(state, PUBLIC(this), cache->texunit-1,
+                                      SoGLMultiTextureEnabledElement::DISABLED);
 }
 
 namespace {
@@ -1745,6 +2019,14 @@ SoShadowGroupP::setFragmentShader(SoState * state)
     str.sprintf("uniform sampler2D shadowMap%d;", i);
     gen.addDeclaration(str, FALSE);
 
+    if (this->shadowlights[i]->alphamap) {
+      str.sprintf("uniform sampler2D alphaMap%d;", i);
+      gen.addDeclaration(str, FALSE);
+
+      str.sprintf("uniform sampler2DShadow alphaDepthMap%d;", i);
+      gen.addDeclaration(str, FALSE);
+    }
+
     str.sprintf("uniform float farval%d;", i);
     gen.addDeclaration(str, FALSE);
 
@@ -1796,16 +2078,23 @@ SoShadowGroupP::setFragmentShader(SoState * state)
   }
   gen.addMainStatement("vec3 color = perVertexColor;\n"
                        "vec3 scolor = vec3(0.0);\n"
+                       "vec3 acolor;\n"
                        "float dist;\n"
                        "float swidth;\n"
+                       "float totalShade = 0.0;\n"
                        "float shadeFactor;\n"
+                       "float alphaFactor;\n"
+                       "float s;\n"
                        "vec3 coord;\n"
                        "vec4 map;\n"
                        "mydiffuse.a *= texcolor.a;\n");
 
   float swidth = (smoothing % 100000)*5e-5f;
 
-  if (perpixelspot) {
+  // To simplify shadow rendering a bit, we'll always perform perpixel shading for now
+  //
+  // if (perpixelspot)
+  {
     SbString str;
     int count;
 #define MAX_OFFSET_COUNT 8
@@ -1853,18 +2142,18 @@ SoShadowGroupP::setFragmentShader(SoState * state)
       SoShadowLightCache * cache = this->shadowlights[i];
       SbBool dirshadow = FALSE;
       SbBool normalspot = FALSE;
-      SbString insidetest = "&& coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0)";
+      SbBool insidetest = TRUE;
 
       SoLight * light = this->shadowlights[i]->light;
       if (light->isOfType(SoSpotLight::getClassTypeId())) {
         SoSpotLight * sl = static_cast<SoSpotLight*> (light);
         if (sl->dropOffRate.getValue() >= 0.0f) {
-          insidetest = ")";
+          insidetest = FALSE;
           spotlight = TRUE;
           normalspot = TRUE;
         }
         else {
-          insidetest = ")";
+          insidetest = FALSE;
           dirspot = TRUE;
         }
       }
@@ -1872,6 +2161,7 @@ SoShadowGroupP::setFragmentShader(SoState * state)
         dirshadow = TRUE;
         dirlight = TRUE;
       }
+
       if (dirshadow) {
         str.sprintf("dist = dot(ecPosition3.xyz, lightplane%d.xyz) - lightplane%d.w;\n", i,i);
         gen.addMainStatement(str);
@@ -1889,15 +2179,25 @@ SoShadowGroupP::setFragmentShader(SoState * state)
       str.sprintf("swidth = %f;\n", dirshadow?swidth:(swidth*0.1f));
       gen.addMainStatement(str);
 
-      gen.addMainStatement("shadeFactor = 0.0;\n");
-
       str.sprintf("coord = 0.5 * (shadowCoord%d.xyz / shadowCoord%d.w + vec3(1.0));\n", i , i);
       gen.addMainStatement(str);
 
+      str.sprintf("if (shadowCoord%d.z < -0.9999", i);
+      gen.addMainStatement(str);
+      if (insidetest)
+        gen.addMainStatement(" || coord.x < 0.0001 || coord.x > 0.9999 || coord.y < 0.0001 || coord.y > 0.9999");
+      gen.addMainStatement(
+          ") {\n"
+          "  shadeFactor = 1.0;\n"
+          "  acolor = vec3(1.0);\n"
+          "} else {\n"
+          "  shadeFactor = 0.0;\n"
+          "  alphaFactor = 0.0;\n");
+
       for (int j=0; j<count; ++j) {
         str.sprintf("map = texture2D(shadowMap%d, coord.xy + "
-                "(vec2(%f,%f)+offset.xy)*swidth*0.001*shadowCoord%d.w);\n",
-                i, offsets[j*2], offsets[j*2+1], i);
+            "(vec2(%f,%f)+offset.xy)*swidth*0.001*shadowCoord%d.w);\n",
+            i, offsets[j*2], offsets[j*2+1], i);
         gen.addMainStatement(str);
 #ifdef USE_NEGATIVE
         gen.addMainStatement("map = (map + vec4(1.0)) * 0.5;\n");
@@ -1905,14 +2205,37 @@ SoShadowGroupP::setFragmentShader(SoState * state)
 #ifdef DISTRIBUTE_FACTOR
         gen.addMainStatement("map.xy += map.zw / DISTRIBUTE_FACTOR;\n");
 #endif
-        str.sprintf("shadeFactor += ((map.x < 0.9999) && (shadowCoord%d.z > -1.0 %s) "
-                "? VsmLookup(map, (dist - nearval%d) / (farval%d - nearval%d), EPSILON, THRESHOLD) : 1.0;\n",
-                i, insidetest.getString(), i, i, i);
+        str.sprintf("shadeFactor += map.x < 0.9999 ? "
+              "VsmLookup(map, (dist - nearval%d) / (farval%d - nearval%d), EPSILON, THRESHOLD) : 1.0;\n",
+              i, i, i);
         gen.addMainStatement(str);
       }
       if (count > 1) {
         str.sprintf("shadeFactor /= %d.0;\n", count);
         gen.addMainStatement(str);
+      }
+
+      if (cache->alphamap) {
+        gen.addMainStatement(
+            "if (shadeFactor < 0.01) \n"
+            "  acolor = vec3(1.0);\n"
+            "else {\n"
+            "  acolor = vec3(0.0);\n");
+        for (int j=0; j<count; ++j) {
+          str.sprintf("map = texture2D(alphaMap%d, coord.xy + "
+                "(vec2(%f,%f)+offset.xy)*swidth*0.001*shadowCoord%d.w);\n",
+                i, offsets[j*2], offsets[j*2+1], i);
+          gen.addMainStatement(str);
+          gen.addMainStatement("acolor += map.rgb;\n");
+        }
+        if (count > 1) {
+          str.sprintf("acolor /= %d.0;\n", count);
+          gen.addMainStatement(str);
+        }
+        str.sprintf("if(mydiffuse.a!=1.0)\n"
+                    "  acolor *= vec3(1.0 - shadow2D(alphaDepthMap%d, coord));\n", i);
+        gen.addMainStatement(str);
+        gen.addMainStatement("}\n");
       }
 
       if (dirshadow && light->isOfType(SoShadowDirectionalLight::getClassTypeId())) {
@@ -1933,10 +2256,15 @@ SoShadowGroupP::setFragmentShader(SoState * state)
           gen.addMainStatement("shadeFactor = 1.0 - shadeFactor;\n");
         }
       }
-      gen.addMainStatement("color += shadeFactor * diffuse.rgb * mydiffuse.rgb;");
-      gen.addMainStatement("scolor += shadeFactor * gl_FrontMaterial.specular.rgb * specular.rgb;\n");
-      gen.addMainStatement("color += ambient.rgb * gl_FrontMaterial.ambient.rgb;\n");
+      gen.addMainStatement(
+          "}\n"
+          "totalShade += shadeFactor;\n"
+          "color += shadeFactor * diffuse.rgb * mydiffuse.rgb * acolor;\n"
+          "scolor += shadeFactor * gl_FrontMaterial.specular.rgb * specular.rgb;\n"
+          "color += ambient.rgb * gl_FrontMaterial.ambient.rgb;\n");
     }
+    str.sprintf("totalShade /= %d.0;\n", numshadowlights);
+    gen.addMainStatement(str);
 
     if (perpixelother) {
       SbBool pointlight = FALSE;
@@ -1970,41 +2298,17 @@ SoShadowGroupP::setFragmentShader(SoState * state)
     if (spotlight) gen.addNamedFunction(SbName("lights/SpotLight"), FALSE);
   }
 
-  else {
-    for (i = 0; i < numshadowlights; i++) {
-      SbString insidetest = "&& coord.x >= 0.0 && coord.x <= 1.0 && coord.y >= 0.0 && coord.y <= 1.0)";
+  gen.addMainStatement(
+      "if (coin_light_model != 0) {\n"
+      "  color *= texcolor.rgb;\n"
+      "  color += scolor;\n"
+      "} else \n"
+      // When lighting is off, the shadeFactor seems too aggressive. The clamp
+      // is added here to mix the shadow color with the ground. It would be better
+      // to expose this as an attribute somehow.
+      "  color = clamp(totalShade,0.5,1.0) * mydiffuse.rgb * texcolor.rgb;\n");
 
-      SoLight * light = this->shadowlights[i]->light;
-      if (light->isOfType(SoSpotLight::getClassTypeId())) {
-        SoSpotLight * sl = static_cast<SoSpotLight*> (light);
-        if (sl->dropOffRate.getValue() >= 0.0f) {
-          insidetest = ")";
-        }
-      }
-      SbString str;
-      str.sprintf("dist = length(vec3(gl_LightSource[%d].position) - ecPosition3);\n"
-                  "coord = 0.5 * (shadowCoord%d.xyz / shadowCoord%d.w + vec3(1.0));\n"
-                  "map = texture2D(shadowMap%d, coord.xy);\n"
-#ifdef USE_NEGATIVE
-                  "map = (map + vec4(1.0)) * 0.5;\n"
-#endif // USE_NEGATIVE
-#ifdef DISTRIBUTE_FACTOR
-                  "map.xy += map.zw / DISTRIBUTE_FACTOR;\n"
-#endif
-                  "shadeFactor = (shadowCoord%d.z > -1.0%s ? VsmLookup(map, (dist - nearval%d)/(farval%d-nearval%d), EPSILON, THRESHOLD) : 1.0;\n"
-                  "color += shadeFactor * spotVertexColor%d;\n",
-                  lights.getLength()+i, i , i, i, i,insidetest.getString(), i,i,i,i);
-      gen.addMainStatement(str);
-    }
-  }
-
-  gen.addMainStatement("if (coin_light_model != 0) { color *= texcolor.rgb; color += scolor; }\n"
-                       // When lighting is off, the shadeFactor seems too aggressive. The clamp
-                       // is added here to mix the shadow color with the ground. It would be better
-                       // to expose this as an attribute somehow.
-                       "else color = clamp(shadeFactor,0.5,1.0) * mydiffuse.rgb * texcolor.rgb;\n");
-
-  gen.addMainStatement("if (shadow_alpha != 1.0 && mydiffuse.a == 0.0 && shadeFactor < 1.0) {"
+  gen.addMainStatement("if (shadow_alpha != 1.0 && mydiffuse.a == 0.0 && totalShade < 0.999) {"
                             "mydiffuse.a = shadow_alpha;"
                             "color = vec3(clamp(color.r, 0.0, mydiffuse.r),"
                                          "clamp(color.g, 0.0, mydiffuse.g),"
@@ -2071,6 +2375,25 @@ SoShadowGroupP::setFragmentShader(SoState * state)
     }
     shadowmap->value = cache->texunit;
     this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), shadowmap);
+
+    if (cache->alphamap) {
+      SoShaderParameter1i * param = this->shadowlights[i]->alphamapid;
+      SbString str;
+      str.sprintf("alphaMap%d", i);
+      if (param->name.getValue() != str) {
+        param->name = str;
+      }
+      param->value = cache->texunit - 1;
+      this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), param);
+
+      param = this->shadowlights[i]->alphadepthmapid;
+      str.sprintf("alphaDepthMap%d", i);
+      if (param->name.getValue() != str) {
+        param->name = str;
+      }
+      param->value = cache->texunit - 2;
+      this->fragmentshader->parameter.set1Value(this->fragmentshader->parameter.getNum(), param);
+    }
   }
 
   for (i = 0; i < numshadowlights; i++) {
@@ -2227,11 +2550,10 @@ SoShadowGroupP::setFragmentShader(SoState * state)
   SoCacheElement::setInvalid(storedinvalid);
 }
 
-void
-SoShadowLightCache::createVSMProgram(void)
+SoShaderProgram *
+SoShadowLightCache::createVSMProgram()
 {
   SoShaderProgram * program = new SoShaderProgram;
-  program->ref();
 
   SoVertexShader * vshader = new SoVertexShader;
   SoFragmentShader * fshader = new SoFragmentShader;
@@ -2248,7 +2570,7 @@ SoShadowLightCache::createVSMProgram(void)
 
   vgen.addDeclaration("varying vec3 light_vec;", FALSE);
   vgen.addMainStatement("light_vec = (gl_ModelViewMatrix * gl_Vertex).xyz;\n"
-                        "gl_Position = ftransform();");
+                        "gl_Position = ftransform();\n");
 
   vshader->sourceProgram = vgen.getShaderProgram();
   vshader->sourceType = SoShaderObject::GLSL_PROGRAM;
@@ -2268,42 +2590,78 @@ SoShadowLightCache::createVSMProgram(void)
   else {
     fgen.addMainStatement("float l = (-light_vec.z - nearval) / (farval-nearval);\n");
   }
+  
   fgen.addMainStatement(
 #ifdef DISTRIBUTE_FACTOR
-                        "vec2 m = vec2(l, l*l);\n"
-                        "vec2 f = fract(m * DISTRIBUTE_FACTOR);\n"
+                      "vec2 m = vec2(l, l*l);\n"
+                      "vec2 f = fract(m * DISTRIBUTE_FACTOR);\n"
 
 #ifdef USE_NEGATIVE
-                        "gl_FragColor.rg = (m - (f / DISTRIBUTE_FACTOR)) * 2.0 - vec2(1.0, 1.0);\n"
-                        "gl_FragColor.ba = f * 2.0 - vec2(1.0, 1.0);\n"
+                      "gl_FragColor.rg = (m - (f / DISTRIBUTE_FACTOR)) * 2.0 - vec2(1.0, 1.0);\n"
+                      "gl_FragColor.ba = f * 2.0 - vec2(1.0, 1.0);\n"
 #else // USE_NEGATIVE
-                        "gl_FragColor.rg = m - (f / DISTRIBUTE_FACTOR);\n"
-                        "gl_FragColor.ba = f;\n"
+                      "gl_FragColor.rg = m - (f / DISTRIBUTE_FACTOR);\n"
+                      "gl_FragColor.ba = f;\n"
 #endif // ! USE_NEGATIVE
 #else // DISTRIBUTE_FACTOR
 #ifdef USE_NEGATIVE
-                        "gl_FragColor = vec4(l*2.0 - 1.0, l*l*2.0 - 1.0, 0.0, 0.0);"
+                      "gl_FragColor = vec4(l*2.0 - 1.0, l*l*2.0 - 1.0, 0.0, 0.0);\n"
 #else // USE_NEGATIVE
-                        "gl_FragColor = vec4(l, l*l, 0.0, 0.0);"
+                      "gl_FragColor = vec4(l, l*l, 0.0, 0.0);\n"
 #endif // !USE_NEGATIVE
 #endif // !DISTRIBUTE_FACTOR
-                        );
+                      );
+
   fshader->sourceProgram = fgen.getShaderProgram();
   fshader->sourceType = SoShaderObject::GLSL_PROGRAM;
 
-  this->vsm_program = program;
-  this->vsm_program->ref();
+  if (!this->vsm_farval) {
+    this->vsm_farval = new SoShaderParameter1f;
+    this->vsm_farval->ref();
+    this->vsm_farval->name = "farval";
+  }
 
-  this->vsm_farval = new SoShaderParameter1f;
-  this->vsm_farval->ref();
-  this->vsm_farval->name = "farval";
-
-  this->vsm_nearval = new SoShaderParameter1f;
-  this->vsm_nearval->ref();
-  this->vsm_nearval->name = "nearval";
+  if (!this->vsm_nearval) {
+    this->vsm_nearval = new SoShaderParameter1f;
+    this->vsm_nearval->ref();
+    this->vsm_nearval->name = "nearval";
+  }
 
   fshader->parameter = this->vsm_farval;
   fshader->parameter.set1Value(1, this->vsm_nearval);
+
+  return program;
+}
+
+SoShaderProgram *
+SoShadowLightCache::createAlphaProgram()
+{
+  SoShaderProgram * program = new SoShaderProgram;
+
+  SoVertexShader * vshader = new SoVertexShader;
+  SoFragmentShader * fshader = new SoFragmentShader;
+
+  program->shaderObject.set1Value(0, vshader);
+  program->shaderObject.set1Value(1, fshader);
+
+  SoShaderGenerator & vgen = this->vsm_vertex_generator;
+  SoShaderGenerator & fgen = this->vsm_fragment_generator;
+
+  vgen.reset(FALSE);
+
+  vgen.addMainStatement("gl_Position = ftransform();\n"
+                        "gl_FrontColor = gl_Color;\n"
+                        "gl_BackColor = gl_Color;");
+
+  vshader->sourceProgram = vgen.getShaderProgram();
+  vshader->sourceType = SoShaderObject::GLSL_PROGRAM;
+
+  fgen.reset(FALSE);
+  fgen.addMainStatement("gl_FragColor = gl_Color;");
+
+  fshader->sourceProgram = fgen.getShaderProgram();
+  fshader->sourceType = SoShaderObject::GLSL_PROGRAM;
+  return program;
 }
 
 void
@@ -2326,6 +2684,13 @@ SoShadowGroupP::shader_enable_cb(void * closure,
       cc_glglue_glActiveTexture(glue, (GLenum) (int(GL_TEXTURE0) + unit));
       if (enable) glEnable(GL_TEXTURE_2D);
       else glDisable(GL_TEXTURE_2D);
+
+      if (cache->alphamap) {
+        cc_glglue_glActiveTexture(glue, (GLenum) (int(GL_TEXTURE0) + unit - 1));
+        if (enable) glEnable(GL_TEXTURE_2D);
+        else glDisable(GL_TEXTURE_2D);
+      }
+
       cc_glglue_glActiveTexture(glue, GL_TEXTURE0);
     }
   }
@@ -2398,7 +2763,9 @@ SoShadowGroupP::GLRender(SoGLRenderAction * action, const SbBool inpath)
 
   SoShadowStyleElement::set(state, PUBLIC(this), SoShadowStyleElement::CASTS_SHADOW_AND_SHADOWED);
   SoShapeStyleElement::setShadowMapRendering(state, TRUE);
+
   this->updateShadowLights(action);
+
   SoShapeStyleElement::setShadowMapRendering(state, FALSE);
 
   if (!this->vertexshadercache || !this->vertexshadercache->isValid(state)) {
@@ -2440,7 +2807,7 @@ initGaussian(SbList<float> &weights, int size)
 }
 
 SoShaderProgram *
-SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
+SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal, bool transparentShadow)
 {
   SoVertexShader * vshader = new SoVertexShader;
   SoFragmentShader * fshader = new SoFragmentShader;
@@ -2462,7 +2829,7 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
   fgen.addDeclaration(str, FALSE);
 #endif
 
-  fgen.addMainStatement("vec2 m = vec2(0.0);\n");
+  fgen.addMainStatement("vec4 m = vec4(0.0);\n");
   fgen.addMainStatement("vec4 map;\n");
   fgen.addMainStatement(str);
 
@@ -2474,14 +2841,20 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
   else
       fmt = "map = texture2D(baseimage, gl_TexCoord[0].st + vec2(0.0,%f));\n";
 
-  const char *fmt2 =
+  const char *fmt2;
+  if (transparentShadow) {
+    fmt2 = "m += map * %f;\n";
+  }
+  else {
+    fmt2 = 
 #ifdef USE_NEGATIVE
             "map = (map + vec4(1.0)) * 0.5;\n"
 #endif // USE_NEGATIVE
 #ifdef DISTRIBUTE_FACTOR
             "map.xy += map.zw / DISTRIBUTE_FACTOR;\n"
 #endif
-            "m += map.xy * %f;\n";
+            "m += map * %f;\n";
+  }
 
 #ifdef USE_BOX_FILTER
   float weight = 1.0f/(size*2+1);
@@ -2509,25 +2882,29 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
     fgen.addMainStatement(str);
   }
 
-  fgen.addMainStatement(
+  if (transparentShadow) {
+    fgen.addMainStatement("gl_FragColor = m;\n");
+  }
+  else {
+    fgen.addMainStatement(
 #ifdef DISTRIBUTE_FACTOR
-                        "vec2 f = fract(m * DISTRIBUTE_FACTOR);\n"
-
-#ifdef USE_NEGATIVE
-                        "gl_FragColor.rg = (m - (f / DISTRIBUTE_FACTOR)) * 2.0 - vec2(1.0, 1.0);\n"
+                        "vec2 f = fract(m.rg * DISTRIBUTE_FACTOR);\n"
+#   ifdef USE_NEGATIVE
+                        "gl_FragColor.rg = (m.rg - (f / DISTRIBUTE_FACTOR)) * 2.0 - vec2(1.0, 1.0);\n"
                         "gl_FragColor.ba = f * 2.0 - vec2(1.0, 1.0);\n"
-#else // USE_NEGATIVE
-                        "gl_FragColor.rg = m - (f / DISTRIBUTE_FACTOR);\n"
+#   else // USE_NEGATIVE
+                        "gl_FragColor.rg = m.rg - (f / DISTRIBUTE_FACTOR);\n"
                         "gl_FragColor.ba = f;\n"
-#endif // ! USE_NEGATIVE
-#else // DISTRIBUTE_FACTOR
-#ifdef USE_NEGATIVE
-                        "gl_FragColor = vec4(m.x*2.0 - 1.0, m.y*2.0 - 1.0, 0.0, 0.0);"
-#else // USE_NEGATIVE
-                        "gl_FragColor = vec4(m.x, m.y, 0.0, 0.0);"
-#endif // !USE_NEGATIVE
+#   endif // ! USE_NEGATIVE
+#else  // DISTRIBUTE_FACTOR
+#   ifdef USE_NEGATIVE
+                        "gl_FragColor = vec4(m.r*2.0 - 1.0, m.g*2.0 - 1.0, 0.0, 0.0);"
+#   else // USE_NEGATIVE
+                        "gl_FragColor = vec4(m.r, m.g, 0.0, 0.0);"
+#   endif // !USE_NEGATIVE
 #endif // !DISTRIBUTE_FACTOR
-          );
+                         );
+  }
 
   program->shaderObject = vshader;
   program->shaderObject.set1Value(1, fshader);
@@ -2548,7 +2925,8 @@ SoShadowLightCache::createGaussFilter(float smoothing, bool horizontal)
 }
 
 SoSeparator *
-SoShadowLightCache::createGaussSG(float smoothing, bool horizontal, SoSceneTexture2 * tex)
+SoShadowLightCache::createGaussScene(float smoothing, bool horizontal,
+                                     SoSceneTexture2 * tex, bool transp)
 {
   SoSeparator * sep = new SoSeparator;
   SoOrthographicCamera * camera = new SoOrthographicCamera;
@@ -2580,13 +2958,21 @@ SoShadowLightCache::createGaussSG(float smoothing, bool horizontal, SoSceneTextu
 
   sep->addChild(tex);
 
-  SoShaderProgram *program = createGaussFilter(smoothing, horizontal);
+  SoShaderProgram *program = createGaussFilter(smoothing, horizontal, transp);
   sep->addChild(program);
 
   SoCoordinate3 * coord = new SoCoordinate3;
   sep->addChild(coord);
 
   coord->point.setValues(0,4,verts);
+
+  if (!this->depthtest) {
+    this->depthtest = new SoDepthBuffer;
+    this->depthtest->ref();
+    this->depthtest->test = FALSE;
+    this->depthtest->write = FALSE;
+  }
+  sep->addChild(this->depthtest);
 
   SoFaceSet * fs = new SoFaceSet;
   fs->numVertices = 4;
@@ -2599,27 +2985,67 @@ void
 SoShadowLightCache::shadowmap_glcallback(void * COIN_UNUSED_ARG(closure), SoAction * action)
 {
   if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
+
+    ((SoGLRenderAction*)action)->resetTransparentShadowObject();
+
     SoState * state = action->getState();
     SoLazyElement::setLightModel(state, SoLazyElement::BASE_COLOR);
     SoTextureQualityElement::set(state, 0.0f);
-    SoMaterialBindingElement::set(state, NULL, SoMaterialBindingElement::OVERALL);
     SoNormalElement::set(state, NULL, 0, NULL, FALSE);
 
-
     SoOverrideElement::setNormalVectorOverride(state, NULL, TRUE);
-    SoOverrideElement::setMaterialBindingOverride(state, NULL, TRUE);
     SoOverrideElement::setLightModelOverride(state, NULL, TRUE);
     SoTextureOverrideElement::setQualityOverride(state, TRUE);
+
+    SoShapeStyleElement::setTransparentShadowMap(state, FALSE);
   }
 }
 
 void
-SoShadowLightCache::shadowmap_post_glcallback(void * COIN_UNUSED_ARG(closure), SoAction * action)
+SoShadowLightCache::shadowmap_post_glcallback(void * closure, SoAction * action)
 {
   if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
     // for debugging the shadow map
     // reinterpret_cast<SoShadowLightCache*>(closure)->dumpBitmap("/home/pederb/Desktop/shadow.rgb");
-    // nothing to do yet
+
+    SoShadowLightCache *self = (SoShadowLightCache *)closure;
+    self->hastransp = ((SoGLRenderAction*)action)->hasTransparentShadowObject();
+  }
+}
+
+void
+SoShadowLightCache::alphamap_glcallback(void * COIN_UNUSED_ARG(closure), SoAction * action)
+{
+  if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
+    SoState * state = action->getState();
+    SoLazyElement::setLightModel(state, SoLazyElement::BASE_COLOR);
+    SoTextureQualityElement::set(state, 0.0f);
+    SoNormalElement::set(state, NULL, 0, NULL, FALSE);
+
+    SoDepthBufferElement::set(state, TRUE, FALSE, SoDepthBufferElement::LEQUAL, SbVec2f(0.,1.));
+
+    SoOverrideElement::setNormalVectorOverride(state, NULL, TRUE);
+    SoOverrideElement::setLightModelOverride(state, NULL, TRUE);
+    SoTextureOverrideElement::setQualityOverride(state, TRUE);
+
+    SoShapeStyleElement::setTransparentShadowMap(state, TRUE);
+  }
+}
+
+void
+SoShadowLightCache::alphadepthmap_glcallback(void * COIN_UNUSED_ARG(closure), SoAction * action)
+{
+  if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
+    SoState * state = action->getState();
+    SoLazyElement::setLightModel(state, SoLazyElement::BASE_COLOR);
+    SoTextureQualityElement::set(state, 0.0f);
+    SoNormalElement::set(state, NULL, 0, NULL, FALSE);
+
+    SoOverrideElement::setNormalVectorOverride(state, NULL, TRUE);
+    SoOverrideElement::setLightModelOverride(state, NULL, TRUE);
+    SoTextureOverrideElement::setQualityOverride(state, TRUE);
+
+    SoShapeStyleElement::setTransparentShadowMap(state, TRUE);
   }
 }
 

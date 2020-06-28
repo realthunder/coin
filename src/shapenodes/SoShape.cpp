@@ -574,10 +574,9 @@ SoShape::shouldGLRender(SoGLRenderAction * action)
                                            SoShapeStyleElement::TRANSP_MATERIAL)) != 0;
 
   if (shapestyleflags & SoShapeStyleElement::SHADOWMAP) {
-    if (transparent) return FALSE;
     int style = SoShadowStyleElement::get(state);
-    if (style & SoShadowStyleElement::CASTS_SHADOW) return TRUE;
-    return FALSE;
+    if (!(style & SoShadowStyleElement::CASTS_SHADOW))
+      return FALSE;
   }
 
   if (action->handleTransparency(transparent))
@@ -1790,3 +1789,4 @@ SoShape::validatePVCache(SoGLRenderAction * action)
 
 
 #undef PRIVATE
+// vim: noai:ts=2:sw=2

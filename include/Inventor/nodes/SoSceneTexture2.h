@@ -119,6 +119,10 @@ public:
   virtual void callback(SoCallbackAction * action);
   virtual void rayPick(SoRayPickAction * action);
 
+  unsigned int getDepthBuffer() const;
+  void setDepthBuffer(SoState *state, unsigned int buffer, SbBool clear);
+  void setDepthFunc(int func);
+
 protected:
   virtual ~SoSceneTexture2(void);
 

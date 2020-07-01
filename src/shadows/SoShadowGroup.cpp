@@ -1644,6 +1644,10 @@ SoShadowGroupP::renderDepthMap(SoShadowLightCache * cache,
       cache->alphamap->unref();
       cache->alphamap = NULL;
     }
+    if (cache->alphadepthmap) {
+      cache->alphadepthmap->unref();
+      cache->alphadepthmap = NULL;
+    }
     return;
   }
 

@@ -248,6 +248,18 @@ typedef void (APIENTRY * COIN_PFNGLMULTIDRAWARRAYSPROC)(GLenum mode, const GLint
 typedef void (APIENTRY * COIN_PFNGLMULTIDRAWELEMENTSPROC)(GLenum mode, const GLsizei * count,
                                                           GLenum type, const GLvoid ** indices, GLsizei primcount);
 
+typedef void (APIENTRY * COIN_PFNGLDRAWBUFFERSPROC)(GLsizei n, const GLenum* bufs);
+
+typedef void (APIENTRY * COIN_PFNGLBLITFRAMEBUFFERSPROC)(GLint srcX0,
+                                                         GLint srcY0,
+                                                         GLint srcX1,
+                                                         GLint srcY1,
+                                                         GLint dstX0,
+                                                         GLint dstY0,
+                                                         GLint dstX1,
+                                                         GLint dstY1,
+                                                         GLbitfield mask,
+                                                         GLenum filter);
 /* Typedefs for NV_vertex_array_range */
 typedef void (APIENTRY * COIN_PFNGLFLUSHVERTEXARRAYRANGENVPROC)(void);
 typedef void (APIENTRY * COIN_PFNGLVERTEXARRAYRANGENVPROC)(GLsizei size, const GLvoid * pointer);
@@ -551,6 +563,7 @@ typedef void (APIENTRY * COIN_PFNGLBINDRENDERBUFFERPROC)(GLenum target, GLuint r
 typedef void (APIENTRY * COIN_PFNGLDELETERENDERBUFFERSPROC)(GLsizei n, const GLuint *renderbuffers);
 typedef void (APIENTRY * COIN_PFNGLGENRENDERBUFFERSPROC)(GLsizei n, GLuint *renderbuffers);
 typedef void (APIENTRY * COIN_PFNGLRENDERBUFFERSTORAGEPROC)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void (APIENTRY * COIN_PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void (APIENTRY * COIN_PFNGLGETRENDERBUFFERPARAMETERIVPROC)(GLenum target, GLenum pname, GLint *params);
 typedef GLboolean (APIENTRY * COIN_PFNGLISFRAMEBUFFERPROC)(GLuint framebuffer);
 typedef void (APIENTRY * COIN_PFNGLBINDFRAMEBUFFERPROC)(GLenum target, GLuint framebuffer);
@@ -560,6 +573,7 @@ typedef GLenum (APIENTRY * COIN_PFNGLCHECKFRAMEBUFFERSTATUSPROC)(GLenum target);
 typedef void (APIENTRY * COIN_PFNGLFRAMEBUFFERTEXTURE1DPROC)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 typedef void (APIENTRY * COIN_PFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 typedef void (APIENTRY * COIN_PFNGLFRAMEBUFFERTEXTURE3DPROC)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
+typedef void (APIENTRY * COIN_PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEPROC)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
 typedef void (APIENTRY * COIN_PFNGLFRAMEBUFFERRENDERBUFFERPROC)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 typedef void (APIENTRY * COIN_PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC)(GLenum target, GLenum attachment, GLenum pname, GLint *params);
 typedef void (APIENTRY * COIN_PFNGLGENERATEMIPMAPPROC)(GLenum target);
@@ -822,6 +836,7 @@ struct cc_glglue {
   COIN_PFNGLDELETERENDERBUFFERSPROC glDeleteRenderbuffers;
   COIN_PFNGLGENRENDERBUFFERSPROC glGenRenderbuffers;
   COIN_PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage;
+  COIN_PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
   COIN_PFNGLGETRENDERBUFFERPARAMETERIVPROC glGetRenderbufferParameteriv;
   COIN_PFNGLISFRAMEBUFFERPROC glIsFramebuffer;
   COIN_PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
@@ -831,9 +846,12 @@ struct cc_glglue {
   COIN_PFNGLFRAMEBUFFERTEXTURE1DPROC glFramebufferTexture1D;
   COIN_PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
   COIN_PFNGLFRAMEBUFFERTEXTURE3DPROC glFramebufferTexture3D;
+  COIN_PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEPROC glFramebufferTexture2DMultisample;
   COIN_PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
   COIN_PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC glGetFramebufferAttachmentParameteriv;
   COIN_PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
+  COIN_PFNGLDRAWBUFFERSPROC glDrawBuffers;
+  COIN_PFNGLBLITFRAMEBUFFERSPROC glBlitFramebuffer;
 
   /* glGetStringi - part of replacement for obsolete glGetString(GL_EXTENSIONS) in OpenGL 3.0 */
   COIN_PFNGLGETSTRINGIPROC glGetStringi;

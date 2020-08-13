@@ -95,7 +95,12 @@ public:
     RGB5_A1,
     RGB10_A2,
     RGBA12,
-    RGBA16
+    RGBA16,
+
+    RED,
+    GREEN,
+    BLUE,
+    ALPHA,
   };
 
   SoSFEnum wrapS;
@@ -123,11 +128,16 @@ public:
   void setDepthBuffer(SoState *state, unsigned int buffer, SbBool clear);
   void setDepthFunc(int func);
 
+  void setMultisample(int samples);
+
 protected:
   virtual ~SoSceneTexture2(void);
 
 private:
   SoSceneTexture2P * pimpl;
+
+  friend class SoSceneTexture2P;
+
 };
 
 #endif // !COIN_SOSCENETEXTURE2_H

@@ -347,6 +347,18 @@
 #ifndef GL_BGR
 #define GL_BGR 0x80E0
 #endif /* GL_BGR */
+#ifndef GL_RED
+#define GL_RED 0x1903
+#endif /* GL_RED */
+#ifndef GL_GREEN
+#define GL_GREEN 0x1904
+#endif /* GL_GREEN */
+#ifndef GL_BLUE
+#define GL_BLUE 0x1905
+#endif /* GL_BLUE */
+#ifndef GL_ALPHA
+#define GL_ALPHA 0x1906
+#endif /* GL_ALPHA */
 
 /* Floating point texture formats (ARB_texture_float) */
 

@@ -1946,6 +1946,7 @@ glglue_resolve_symbols(cc_glglue * w)
     w->glDeleteRenderbuffers = (COIN_PFNGLDELETERENDERBUFFERSPROC)cc_glglue_getprocaddress(w, "glDeleteRenderbuffersEXT");
     w->glGenRenderbuffers = (COIN_PFNGLGENRENDERBUFFERSPROC)cc_glglue_getprocaddress(w, "glGenRenderbuffersEXT");
     w->glRenderbufferStorage = (COIN_PFNGLRENDERBUFFERSTORAGEPROC)cc_glglue_getprocaddress(w, "glRenderbufferStorageEXT");
+    w->glRenderbufferStorageMultisample = (COIN_PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)cc_glglue_getprocaddress(w, "glRenderbufferStorageMultisampleEXT");
     w->glGetRenderbufferParameteriv = (COIN_PFNGLGETRENDERBUFFERPARAMETERIVPROC)cc_glglue_getprocaddress(w, "glGetRenderbufferParameterivEXT");
     w->glIsFramebuffer = (COIN_PFNGLISFRAMEBUFFERPROC)cc_glglue_getprocaddress(w, "glIsFramebufferEXT");
     w->glBindFramebuffer = (COIN_PFNGLBINDFRAMEBUFFERPROC)cc_glglue_getprocaddress(w, "glBindFramebufferEXT");
@@ -1954,10 +1955,13 @@ glglue_resolve_symbols(cc_glglue * w)
     w->glCheckFramebufferStatus = (COIN_PFNGLCHECKFRAMEBUFFERSTATUSPROC)cc_glglue_getprocaddress(w, "glCheckFramebufferStatusEXT");
     w->glFramebufferTexture1D = (COIN_PFNGLFRAMEBUFFERTEXTURE1DPROC)cc_glglue_getprocaddress(w, "glFramebufferTexture1DEXT");
     w->glFramebufferTexture2D = (COIN_PFNGLFRAMEBUFFERTEXTURE2DPROC)cc_glglue_getprocaddress(w, "glFramebufferTexture2DEXT");
+    w->glFramebufferTexture2DMultisample = (COIN_PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEPROC)cc_glglue_getprocaddress(w, "glFramebufferTexture2DMultisampleEXT");
     w->glFramebufferTexture3D = (COIN_PFNGLFRAMEBUFFERTEXTURE3DPROC)cc_glglue_getprocaddress(w, "glFramebufferTexture3DEXT");
     w->glFramebufferRenderbuffer = (COIN_PFNGLFRAMEBUFFERRENDERBUFFERPROC)cc_glglue_getprocaddress(w, "glFramebufferRenderbufferEXT");
     w->glGetFramebufferAttachmentParameteriv = (COIN_PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC)
       cc_glglue_getprocaddress(w, "glGetFramebufferAttachmentParameterivEXT");
+    w->glDrawBuffers = (COIN_PFNGLDRAWBUFFERSPROC) cc_glglue_getprocaddress(w, "glDrawBuffersExt");
+    w->glBlitFramebuffer = (COIN_PFNGLBLITFRAMEBUFFERSPROC) cc_glglue_getprocaddress(w, "glBlitFramebufferEXT");
 
     if (!w->glIsRenderbuffer || !w->glBindRenderbuffer || !w->glDeleteRenderbuffers ||
         !w->glGenRenderbuffers || !w->glRenderbufferStorage || !w->glGetRenderbufferParameteriv ||
@@ -5227,11 +5231,15 @@ coin_catch_gl_errors(cc_string * str)
 {
   unsigned int errs = 0;
   GLenum glerr = glGetError();
+  char errcode[32];
   while (glerr != GL_NO_ERROR) {
     if (errs < 10) {
       if (errs > 0) {
         cc_string_append_char(str, ' ');
       }
+      cc_string_append_char(str, '(');
+      cc_string_append_integer(str, glerr);
+      cc_string_append_char(str, ')');
       cc_string_append_text(str, coin_glerror_string(glerr));
     }
     /* ignore > 10, so we don't run into a situation were we end up
@@ -5358,6 +5366,42 @@ cc_glglue_glRenderbufferStorage(const cc_glglue * glue, GLenum target, GLenum in
   glue->glRenderbufferStorage(target, internalformat, width, height);
 }
 
+SbBool
+cc_glglue_has_multisample(const cc_glglue * glue)
+{
+  return glue->glRenderbufferStorageMultisample != NULL;
+}
+
+void
+cc_glglue_glRenderbufferStorageMultisample(const cc_glglue * glue, GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
+{
+  assert(glue->glRenderbufferStorageMultisample);
+  glue->glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
+}
+
+SbBool
+cc_glglue_has_blit_framebuffer(const cc_glglue * glue)
+{
+  return glue->glBlitFramebuffer != NULL;
+}
+
+void
+cc_glglue_glBlitFramebuffer(const cc_glglue * glue,
+                            GLint srcX0,
+                            GLint srcY0,
+                            GLint srcX1,
+                            GLint srcY1,
+                            GLint dstX0,
+                            GLint dstY0,
+                            GLint dstX1,
+                            GLint dstY1,
+                            GLbitfield mask,
+                            GLenum filter)
+{
+  assert(glue->glBlitFramebuffer);
+  glue->glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+}
+
 void
 cc_glglue_glGetRenderbufferParameteriv(const cc_glglue * glue, GLenum target, GLenum pname, GLint * params)
 {
@@ -5415,6 +5459,13 @@ cc_glglue_glFramebufferTexture2D(const cc_glglue * glue, GLenum target, GLenum a
 }
 
 void
+cc_glglue_glFramebufferTexture2DMultisample(const cc_glglue * glue, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples)
+{
+  assert(glue->glFramebufferTexture2DMultisample);
+  glue->glFramebufferTexture2DMultisample(target, attachment, textarget, texture, level, samples);
+}
+
+void
 cc_glglue_glFramebufferTexture3D(const cc_glglue * glue, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
 {
   assert(glue->has_fbo);
@@ -5462,8 +5513,22 @@ cc_glglue_has_framebuffer_objects(const cc_glglue * glue)
   return glue->has_fbo;
 }
 
+SbBool
+cc_glglue_has_draw_buffers(const cc_glglue * glue)
+{
+  return glue->glDrawBuffers != NULL;
+}
+
+void
+cc_glglue_glDrawBuffers(const cc_glglue * glue, GLsizei n, const GLenum* bufs)
+{
+  assert(glue->glDrawBuffers);
+  glue->glDrawBuffers(n, bufs);
+}
+
 /* ********************************************************************** */
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
+// vim: noai:ts=2:sw=2

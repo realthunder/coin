@@ -618,17 +618,42 @@ SoGLLazyElement::send(const SoState * stateptr, uint32_t mask) const
               this->coinstate.blend_dfactor != this->glstate.blend_dfactor ||
               this->coinstate.alpha_blend_sfactor != this->glstate.alpha_blend_sfactor ||
               this->coinstate.alpha_blend_dfactor != this->glstate.alpha_blend_dfactor) {
-            if ((this->coinstate.alpha_blend_sfactor != 0) &&
+
+            int rgbmode = ((unsigned)this->coinstate.blend_sfactor) >> 16;
+            int blend_sfactor = this->coinstate.blend_sfactor & 0xFFFF;
+            int gl_rgbmode = ((unsigned)this->glstate.blend_sfactor) >> 16;
+
+            int alphamode = ((unsigned)this->coinstate.alpha_blend_sfactor) >> 16;
+            int alpha_blend_sfactor = this->coinstate.alpha_blend_sfactor & 0xFFFF;
+            int gl_alphamode = ((unsigned)this->glstate.alpha_blend_sfactor) >> 16;
+
+            const cc_glglue * glue = cc_glglue_instance(SoGLCacheContextElement::get((SoState*)stateptr));
+
+            if (rgbmode != gl_rgbmode || alphamode != gl_alphamode) {
+              if (!rgbmode)
+                rgbmode = GL_FUNC_ADD;
+              if (!alphamode)
+                alphamode = GL_FUNC_ADD;
+              if (rgbmode != alphamode && cc_glglue_has_blendequationseparate(glue))
+                cc_glglue_glBlendEquationSeparate(glue, rgbmode, alphamode);
+              else if (cc_glglue_has_blendequation(glue))
+                cc_glglue_glBlendEquation(glue, rgbmode);
+            }
+
+            if ((alpha_blend_sfactor != 0) &&
                 (this->coinstate.alpha_blend_dfactor != 0)) {
-              this->enableSeparateBlending(cc_glglue_instance(SoGLCacheContextElement::get((SoState*)stateptr)),
-                                           this->coinstate.blend_sfactor,
+              this->enableSeparateBlending(glue,
+                                           blend_sfactor,
                                            this->coinstate.blend_dfactor,
-                                           this->coinstate.alpha_blend_sfactor,
+                                           alpha_blend_sfactor,
                                            this->coinstate.alpha_blend_dfactor);
             }
             else {
-              this->enableBlending(this->coinstate.blend_sfactor, this->coinstate.blend_dfactor);
+              this->enableBlending(blend_sfactor, this->coinstate.blend_dfactor);
             }
+
+            this->glstate.blend_sfactor = this->coinstate.blend_sfactor;
+            this->glstate.alpha_blend_sfactor = this->coinstate.alpha_blend_sfactor;
           }
         }
         else {
@@ -1001,6 +1026,13 @@ SoGLLazyElement::beginCaching(SoState * state, GLState * prestate,
                               GLState * poststate)
 {
   SoGLLazyElement * elem = getInstance(state);
+
+  if (elem->postcachestate) {
+#if COIN_DEBUG
+    SoDebugError::postWarning("SoGLLazyElement::beginCaching", "Unmatched call");
+#endif
+  }
+
   elem->send(state, ALL_MASK); // send lazy state before starting to build cache
   *prestate = elem->glstate; // copy current GL state
   prestate->diffusenodeid = elem->coinstate.diffusenodeid;
@@ -1013,12 +1045,20 @@ SoGLLazyElement::beginCaching(SoState * state, GLState * prestate,
   elem->didntsetbitmask = 0;
   elem->cachebitmask = 0;
   elem->opencacheflags = 0;
+
 }
 
 void
 SoGLLazyElement::endCaching(SoState * state)
 {
   SoGLLazyElement * elem = getInstance(state);
+
+  if (!elem->postcachestate) {
+#if COIN_DEBUG
+    SoDebugError::postWarning("SoGLLazyElement::endCaching", "Unmatched call");
+#endif
+    return;
+  }
 
   *elem->postcachestate = elem->glstate;
   elem->postcachestate->cachebitmask = elem->cachebitmask;
@@ -1290,3 +1330,4 @@ SoGLLazyElement::mergeCacheInfo(SoState * state,
 #undef FLAG_FORCE_DIFFUSE
 #undef FLAG_DIFFUSE_DEPENDENCY
 #undef GLLAZY_DEBUG
+// vim: noai:ts=2:sw=2

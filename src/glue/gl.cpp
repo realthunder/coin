@@ -823,6 +823,8 @@ cc_glglue_glext_supported(const cc_glglue * wrapper, const char * extension)
 #define GL_VERSION_1_3 1
 #define GL_VERSION_1_4 1
 #define GL_VERSION_1_5 1
+#define GL_VERSION_2_0 1
+#define GL_VERSION_3_0 1
 #define GL_EXT_polygon_offset 1
 #define GL_EXT_texture_object 1
 #define GL_EXT_subtexture 1
@@ -1176,6 +1178,8 @@ glglue_resolve_symbols(cc_glglue * w)
   w->glBlendEquation = NULL;
   w->glBlendEquationEXT = NULL;
 
+  w->glBlendEquationSeparate = NULL;
+
 #if defined(GL_VERSION_1_4)
   if (cc_glglue_glversion_matches_at_least(w, 1, 4, 0)) {
     w->glBlendEquation = (COIN_PFNGLBLENDEQUATIONPROC)PROC(w, glBlendEquation);
@@ -1280,6 +1284,12 @@ glglue_resolve_symbols(cc_glglue * w)
     w->glGetBufferPointerv = (COIN_PFNGLGETBUFFERPOINTERVPROC) PROC(w, glGetBufferPointerv);
   }
 #endif /* GL_VERSION_1_5 */
+
+#if defined(GL_VERSION_2_0)
+  if (cc_glglue_glversion_matches_at_least(w, 2, 0, 0)) {
+    w->glBlendEquationSeparate = (COIN_PFNGLBLENDEQUATIONSEPARATEPROC) PROC(w, glBlendEquationSeparate);
+  }
+#endif /* GL_VERSION_2_0 */
 
 #if defined(GL_ARB_vertex_buffer_object)
   if ((w->glBindBuffer == NULL) && cc_glglue_glext_supported(w, "GL_ARB_vertex_buffer_object")) {
@@ -3330,6 +3340,21 @@ cc_glglue_glBlendEquation(const cc_glglue * glue, GLenum mode)
 
   if (glue->glBlendEquation) glue->glBlendEquation(mode);
   else glue->glBlendEquationEXT(mode);
+}
+
+SbBool
+cc_glglue_has_blendequationseparate(const cc_glglue * glue)
+{
+  if (!glglue_allow_newer_opengl(glue)) return FALSE;
+
+  return glue->glBlendEquationSeparate != NULL;
+}
+
+void
+cc_glglue_glBlendEquationSeparate(const cc_glglue * glue, GLenum modergb, GLenum modealpha)
+{
+  assert(glue->glBlendEquationSeparate);
+  glue->glBlendEquationSeparate(modergb, modealpha);
 }
 
 SbBool

@@ -34,7 +34,7 @@
   \class SoSensor SoSensor.h Inventor/sensors/SoSensor.h
   \brief The SoSensor class is the abstract base class for all sensors.
 
-  \ingroup sensors
+  \ingroup coin_sensors
 
   Sensors is a mechanism in Coin for scheduling jobs to be run upon
   specific events. The events in question could be particular points
@@ -55,13 +55,12 @@
   functionality for combining and converting inputs and outputs), you
   just decide which engine you want, connect inputs and output and
   forget about it. Sensors are a lot more flexible in what you can do
-  when they trigger, as control is transfered internally from Coin to
+  when they trigger, as control is transferred internally from Coin to
   your registered callback functions.
 
   \sa SoSensorManager, SoEngine
  */
 
-/*! \file SoSensor.h */
 #include <Inventor/sensors/SoSensor.h>
 #include <cstdlib> // NULL
 #include <coindefs.h> // COIN_OBSOLETED()

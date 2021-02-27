@@ -34,7 +34,7 @@
   \class SbDPViewVolume SbDPViewVolume.h Inventor/SbDPViewVolume.h
   \brief The SbDPViewVolume class is a double precision viewing volume in 3D space.
 
-  \ingroup base
+  \ingroup coin_base
 
   This class contains the necessary information for storing a view
   volume.  It has methods for projection of primitives from or into
@@ -1288,7 +1288,7 @@ SbDPViewVolume::transform(const SbDPMatrix & matrix)
   matrix.multVecMatrix(this->ulf+oldprojpt, newulf);
   newulf -= newprojpt;
 
-  // Construct and tranform nearpt and farpt to find the new near and
+  // Construct and transform nearpt and farpt to find the new near and
   // far values.
   SbVec3d nearpt;
   SbVec3d farpt;

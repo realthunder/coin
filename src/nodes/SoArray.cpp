@@ -34,7 +34,7 @@
   \class SoArray SoArray.h Inventor/nodes/SoArray.h
   \brief The SoArray class is a group node for setting up regular arrays of subgraphs.
 
-  \ingroup nodes
+  \ingroup coin_nodes
 
   SoArray presents a convenient way of duplicating a node (typically a
   shape node) or a complete subgraph in 1 to 3 dimensions.
@@ -422,7 +422,7 @@ SoArray::pick(SoPickAction *action)
   // do not consider the translation inside this node before returning
   // the object space data from SoPickedPoint, since the path in
   // SoPickedPoint does not say anything about on which copy the pick
-  // occured.
+  // occurred.
   //
   // We solved this simply by extending SoPickedPoint for storing both
   // world space and object space data.

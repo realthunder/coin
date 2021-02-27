@@ -35,7 +35,7 @@
   \brief The SoBase class is the top-level superclass for a number
   of class-hierarchies.
 
-  \ingroup general
+  \ingroup coin_general
 
   SoBase provides the basic interfaces and methods for doing reference
   counting, type identification and import/export. All classes in Coin
@@ -249,7 +249,7 @@ SoBase::~SoBase()
 #if COIN_DEBUG
   if (SoBase::PImpl::trackbaseobjects) {
     CC_MUTEX_LOCK(SoBase::PImpl::allbaseobj_mutex);
-    const SbBool ok = SoBase::PImpl::allbaseobj->erase(this);
+    const size_t ok = SoBase::PImpl::allbaseobj->erase(this);
     assert(ok && "something fishy going on in debug object tracking");
     CC_MUTEX_UNLOCK(SoBase::PImpl::allbaseobj_mutex);
   }
@@ -1048,7 +1048,7 @@ SoBase::read(SoInput * in, SoBase *& base, SoType expectedtype)
   // Inventor. What we however /could/ do about it is:
   //
   // First, split out the SoBase::PImpl class definition to a separate
-  // interface, which can be accessed internally from Coin lirbary
+  // interface, which can be accessed internally from Coin library
   // code.
   //
   // Then, in this, write up /sensibly designed/ read()-function(s)
@@ -1704,7 +1704,7 @@ VRMLGroup {
 }
     */
 
-	   /* correct outputfile for default OIV behavoir:
+	   /* correct outputfile for default OIV behavior:
 #VRML V1.0 ascii
 
 DEF root Separator {

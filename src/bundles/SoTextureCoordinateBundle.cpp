@@ -34,7 +34,7 @@
   \class SoTextureCoordinateBundle SoTextureCoordinateBundle.h Inventor/bundles/SoTextureCoordinateBundle.h
   \brief The SoTextureCoordinateBundle class simplifies texture coordinate handling.
 
-  \ingroup bundles
+  \ingroup coin_bundles
 
   It is unlikely that application programmers should need to know how
   to use this class, as it is mostly intended for internal use.
@@ -128,7 +128,7 @@ SoTextureCoordinateBundle(SoAction * const action,
         
       case SoMultiTextureCoordinateElement::TEXGEN:
         // texcoord won't be needed. This will only happen during SoGLRenderAction,
-        // when GL generates texture coorinates. Therefore, we will not set
+        // when GL generates texture coordinates. Therefore, we will not set
         // the FLAG_NEEDCOORDS here.
         this->flags |= FLAG_FUNCTION;
         if (!forRendering) {
@@ -345,7 +345,7 @@ SoTextureCoordinateBundle::initDefaultCallback(SoAction * action)
     shape->computeBBox(action, box, center);
   }
 
-  // just use som default values if the shape bbox is empty
+  // just use some default values if the shape bbox is empty
   SbVec3f size(1.0f, 1.0f, 1.0f);
   SbVec3f origo(0.f, 0.0f, 0.0f);
   if (!box.isEmpty()) {

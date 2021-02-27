@@ -38,7 +38,7 @@
 //
 //  Comments about 3ds files: Structure of the 3ds files is well known
 //  (http://www.cyberloonies.com/3dsftk.html). However, it is often hard to
-//  understand what is the informations in 3ds file about and how to
+//  understand what is the information in 3ds file about and how to
 //  interpret them. For example, texture coordinates are not always
 //  represented by OpenGL texture coordinates, and I can't find out
 //  what is their meaning.
@@ -314,7 +314,7 @@ struct tagMaterial;
 struct tagContext;
 
 
-typedef struct {
+typedef struct tagVertex {
   SbVec3f point;
   SbVec2f texturePoint;
   SbList<tagFace*> faceList;
@@ -369,7 +369,7 @@ namespace DefaultFaceGroup {
   static SoIndexedTriangleStripSet* createSoIndexedTriStripSet_i(tagContext *con);
 }
 
-typedef struct {
+typedef struct tagEdge {
   SbList<Face*> faceList;
 } Edge;
 

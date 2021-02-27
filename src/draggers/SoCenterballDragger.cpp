@@ -40,7 +40,7 @@
   \class SoCenterballDragger SoCenterballDragger.h Inventor/draggers/SoCenterballDragger.h
   \brief The SoCenterballDragger class is a dragger you can rotate and translate.
 
-  \ingroup draggers
+  \ingroup coin_draggers
 
   \DRAGGER_DEFAULT_SCREENSHOT
 
@@ -401,7 +401,7 @@ SoCenterballDragger::setSwitches(SoDragger * activechild)
   SoSwitch *sw;
 
   if (activechild == NULL || coin_safe_cast<SoNode *>(activechild) == rotator.getValue()) {
-    // special feedback when rotator is activated/deactiveated
+    // special feedback when rotator is activated/deactivated
     int switchval = activechild != NULL ? 1 : 0;
     sw = SO_GET_ANY_PART(this, "XCenterChanger.translatorSwitch", SoSwitch);
     SoInteractionKit::setSwitchValue(sw, switchval);;

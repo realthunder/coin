@@ -35,7 +35,7 @@
   \brief The SbBox2f class is a 2 dimensional box with floating
   point corner coordinates.
 
-  \ingroup base
+  \ingroup coin_base
 
   This box class is used by many other classes in Coin for data
   exchange and storage. It provides two box corners with floating
@@ -228,7 +228,7 @@ SbBox2f::makeEmpty(void)
 /*!
   \fn SbVec2f & SbBox2f::getMin(void)
 
-  Returns a modifiable reference ot the lower left corner of the box.
+  Returns a modifiable reference to the lower left corner of the box.
 
   \sa getOrigin(), getMax().
 */

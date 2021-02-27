@@ -30,7 +30,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \**************************************************************************/
 
-/*! \file SbProfilingData.h */
+/*!
+  \struct SbNodeProfilingData
+  \brief Data structure for gathering scene graph traversal profiling information for one node.
+
+  \ingroup coin_profiler
+*/
+
+/*!
+  \class SbProfilingData SbProfilingData.h Inventor/annex/SbProfilingData.h
+  \brief Data structure for gathering scene graph traversal profiling information.
+
+  \ingroup coin_profiler
+*/
+
 #include <Inventor/annex/Profiler/SbProfilingData.h>
 #include "coindefs.h"
 
@@ -154,20 +167,6 @@ public:
 }; // SbProfilingDataP
 
 #define PRIVATE(obj) ((obj)->pimpl)
-
-/*!
-  \struct SbNodeProfilingData
-  \brief Data structure for gathering scene graph traversal profiling information for one node.
-
-  \ingroup profiler
-*/
-
-/*!
-  \class SbProfilingData
-  \brief Data structure for gathering scene graph traversal profiling information.
-
-  \ingroup profiler
-*/
 
 /*!
   Constructor.
@@ -352,7 +351,7 @@ SbProfilingData::operator += (const SbProfilingData & rhs)
         dst.push_back(data);
         matchidx = dst.size() - 1;
       }
-      // acumulate data (something about this really doesn't make sense)
+      // accumulate data (something about this really doesn't make sense)
       dst[matchidx].traversaltime += src[c].traversaltime;
       dst[matchidx].memorysize += src[c].memorysize;
       dst[matchidx].texturesize += src[c].texturesize;

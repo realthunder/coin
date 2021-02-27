@@ -34,7 +34,7 @@
   \class SoGLMultiTextureImageElement Inventor/elements/SoGLMultiTextureImageElement.h
   \brief The SoGLMultiTextureImageElement class is used to control the current GL texture for texture units.
 
-  \ingroup elements
+  \ingroup coin_elements
 
   FIXME: write doc.
 */
@@ -365,6 +365,13 @@ SoGLMultiTextureImageElement::updateGL(const int unit)
       dl->call(state);
     }
     cc_glglue_glActiveTexture(glue, (GLenum) GL_TEXTURE0);
+
+    GLenum glerror = sogl_glerror_debugging() ? glGetError() : GL_NO_ERROR;
+    while (glerror) {
+        SoDebugError::postWarning("SoGLMultiTextureImageElement::updateGL",
+            "glError() = %d\n", glerror);
+        glerror = glGetError();
+    }
   }
 }
 

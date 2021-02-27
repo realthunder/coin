@@ -34,7 +34,7 @@
   \class SoGLCacheList SoGLCacheList.h Inventor/caches/SoGLCacheList.h
   \brief The SoGLCacheList class is used to store and manage OpenGL caches.
 
-  \ingroup caches
+  \ingroup coin_caches
 */
 
 #include <Inventor/caches/SoGLCacheList.h>
@@ -544,7 +544,7 @@ SoGLCacheList::open(SoGLRenderAction * action, SbBool autocache)
                                   PRIVATE(this)->opencache->getPostLazyState());
     PRIVATE(this)->opencache->open(state);
 
-    // force a dependency on the transparecy type
+    // force a dependency on the transparency type
     // FIXME: consider adding a new element for storing the
     // transparency type.  The dependency tracking on the transparency
     // type would then work automatically. pederb, 2005-02-18

@@ -37,7 +37,6 @@
  * page number refers to the corresponding pseude-code in the book.
  */
 
-/*! \file rbptree.h */
 #include <Inventor/C/base/rbptree.h>
 
 #include <cassert>
@@ -403,7 +402,7 @@ cc_rbptree_init(cc_rbptree * t)
 }
 
 /*
- * recurively delete the \c x subgraph.
+ * recursively delete the \c x subgraph.
  */
 static void
 rbptree_recursive_clean(cc_rbptree_node * x)

@@ -34,7 +34,7 @@
   \class SoSensorManager SoSensorManager.h Inventor/sensors/SoSensorManager.h
   \brief The SoSensorManager class handles the sensor queues.
 
-  \ingroup sensors
+  \ingroup coin_sensors
 
   There are two major sensor types in Coin, "delay" sensors and
   "timer" sensors:
@@ -238,7 +238,7 @@ SoSensorManagerP::assertAlive(SoSensorManagerP * that)
 #define PRIVATE(obj) ((obj)->pimpl)
 
 // Callback called whenever the timeoutsensor triggers
-// beacuse the system hasn't been idle for a while.
+// because the system hasn't been idle for a while.
 static void
 timeoutsensor_cb(void * userdata, SoSensor *)
 {

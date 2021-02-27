@@ -40,7 +40,7 @@
   \class SoNodeKitListPart SoNodeKitListPart.h Inventor/nodekits/SoNodeKitListPart.h
   \brief The SoNodeKitListPart class is a container node.
 
-  \ingroup nodekits
+  \ingroup coin_nodekits
 
   This node is basically just a container node with these differences versus
   the other group nodes:
@@ -113,7 +113,7 @@ SoNodeKitListPart::SoNodeKitListPart(void)
 
   this->containerNode.setValue(new SoGroup);
   // to avoid notification problems (container node is in the scene
-  // graph and notification will be propagated throught the scene
+  // graph and notification will be propagated throughout the scene
   // graph). If notification is enabled for this field, the trigger
   // path will be incorrect since it will stop at this node.
   this->containerNode.enableNotify(FALSE);

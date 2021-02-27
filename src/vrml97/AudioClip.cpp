@@ -40,8 +40,8 @@
   \class SoVRMLAudioClip SoVRMLAudioClip.h Inventor/VRMLnodes/SoVRMLAudioClip.h
   \brief The SoVRMLAudioClip class is used to load and store audio data.
 
-  \ingroup VRMLnodes
-  \ingroup sound
+  \ingroup coin_VRMLnodes
+  \ingroup coin_sound
 
   Audio data is loaded using the simage library, so make sure you have
   built the simage library with support for the audio file formats you
@@ -160,7 +160,6 @@
   This eventOut is sent when the sound starts/stops playing.
 */
 
-/*! \file SoVRMLAudioClip.h */
 #include <Inventor/VRMLnodes/SoVRMLAudioClip.h>
 #include "coindefs.h"
 
@@ -786,7 +785,7 @@ SoVRMLAudioClipP::internal_read(void * COIN_UNUSED_ARG(datasource), void *buffer
   while (!bufferFilled) {
     if (this->currentPause>0.0) {
       // deliver a zero'ed,  buffer
-      int outputsize = (numframes - framepos) * channelsdelivered * 
+      size_t outputsize = size_t(numframes - framepos) * size_t(channelsdelivered) *
         sizeof(int16_t);
       memset(((int16_t *)buffer) + framepos*channelsdelivered, 0, outputsize);
       this->currentPause -= (double)(numframes - framepos) / 
@@ -804,7 +803,7 @@ SoVRMLAudioClipP::internal_read(void * COIN_UNUSED_ARG(datasource), void *buffer
 
     if (this->playlist.getLength() == 0) {
       this->closeFile();
-      int outputsize = (numframes - framepos) * channelsdelivered * 
+      size_t outputsize = size_t(numframes - framepos) * size_t(channelsdelivered) *
         sizeof(int16_t);
       memset(((int16_t *)buffer) + framepos*channelsdelivered, 0, 
               outputsize);
@@ -824,7 +823,7 @@ SoVRMLAudioClipP::internal_read(void * COIN_UNUSED_ARG(datasource), void *buffer
         else {
           // We have played all files in the list, and we're not looping.
           // => We can stop playing.
-          int outputsize = (numframes - framepos) * channelsdelivered * 
+          size_t outputsize = size_t(numframes - framepos) * size_t(channelsdelivered) *
             sizeof(int16_t);
           memset(((int16_t *)buffer) + framepos*channelsdelivered, 0, 
                  outputsize);
@@ -850,7 +849,7 @@ SoVRMLAudioClipP::internal_read(void * COIN_UNUSED_ARG(datasource), void *buffer
       }
 
       if (!success) {
-        int outputsize = (numframes - framepos) * channelsdelivered * 
+        size_t outputsize = size_t(numframes - framepos) * size_t(channelsdelivered) * 
           sizeof(int16_t);
         memset(((int16_t *)buffer) + framepos*channelsdelivered, 0, 
                outputsize);

@@ -34,7 +34,7 @@
   \class SbDPPlane SbDPPlane.h Inventor/SbLinear.h
   \brief The SbDPPlane class represents a plane in 3D space.
 
-  \ingroup base
+  \ingroup coin_base
 
   SbDPPlane is used by many other classes in Coin.  It provides a way of
   representing a plane, specified by a plane normal vector and a
@@ -441,10 +441,10 @@ BOOST_AUTO_TEST_CASE(equalityToFloatPlane)
   const float delX = 1;
   const float delY = .1f;
 
-  const float XMax = pow(2.f,FLT_MAX_EXP/3);
+  const float XMax = (float)pow(2.,FLT_MAX_EXP/3.);
   const float XMin = -XMax;
 
-  const float YMax = pow(2.f,FLT_MAX_EXP/3);
+  const float YMax = (float)pow(2.,FLT_MAX_EXP/3.);
   const float YMin = -YMax;
 
 #ifdef TEST_SUITE_QUICK

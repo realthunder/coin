@@ -34,8 +34,8 @@
   \class SoAudioDevice SoAudioDevice.h Inventor/misc/SoAudioDevice.h
   \brief The SoAudioDevice class is used to control an audio device.
 
-  \ingroup general
-  \ingroup sound
+  \ingroup coin_general
+  \ingroup coin_sound
 
   The SoAudioDevice class is responsible for initialization of an 
   audio device, as well as enabling and disabling sound. It is a singleton
@@ -243,7 +243,7 @@ SoAudioDevice::init(const SbString & devicetype, const SbString & devicename)
 
   // Yes, there's both COIN_SOUND_ENABLE and COIN_SOUND_DISABLE -- one
   // should be sufficient, but for compatibility reasons with
-  // exisiting runtime systems, we keep them both.
+  // existing runtime systems, we keep them both.
   env = coin_getenv("COIN_SOUND_DISABLE");
   if (env && (atoi(env) > 0)) {
     if (coin_debug_audio()) {

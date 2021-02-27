@@ -911,7 +911,7 @@ cc_xml_elt_dump_to_file(const cc_xml_elt * elt, int indent, FILE * fp)
 
   Utility function for flattening recursive traversals to do-while loops.
 
-  \ingroup cc_xml_elt
+  \ingroup coin_cc_xml_elt
 */
 
 cc_xml_elt *
@@ -940,7 +940,7 @@ cc_xml_elt_get_traversal_next(const cc_xml_elt * root, cc_xml_elt * here)
       // if we're back to root, simply quit..
       if (here == root) return NULL;
     } else {
-      // there is more children than 'here' left, find someone thats not "cdata".
+      // there is more children than 'here' left, find someone that's not "cdata".
       do {
           ++idx;
           here = cc_xml_elt_get_child(parent, idx);

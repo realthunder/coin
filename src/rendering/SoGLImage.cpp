@@ -183,7 +183,6 @@
 
 // *************************************************************************
 
-/*! \file SoGLImage.h */
 #include <Inventor/misc/SoGLImage.h>
 
 #include <cassert>
@@ -1865,9 +1864,9 @@ SoGLImageP::reallyCreateTexture(SoState *state,
 
       if (generatemipmap) {
         SbBool wasenabled = TRUE;
-        // Woraround for ATi driver bug. GL_TEXTURE_2D needs to be
+        // Workaround for ATi driver bug. GL_TEXTURE_2D needs to be
         // enabled when using glGenerateMipmap(), according to
-        // dicussions on the opengl.org forums.
+        // discussions on the opengl.org forums.
         if (glw->vendor_is_ati) {
           if (!glIsEnabled(GL_TEXTURE_2D)) {
             wasenabled = FALSE;

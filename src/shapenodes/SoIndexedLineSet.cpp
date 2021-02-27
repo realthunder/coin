@@ -34,7 +34,7 @@
   \class SoIndexedLineSet SoIndexedLineSet.h Inventor/nodes/SoIndexedLineSet.h
   \brief The SoIndexedLineSet class is used to render and otherwise represent indexed lines.
 
-  \ingroup nodes
+  \ingroup coin_nodes
 
   The indexed counterpart of SoLineSet. Lines can specified using
   indices for coordinates, normals, materials and texture coordinates.
@@ -199,25 +199,25 @@ SoIndexedLineSet::findMaterialBinding(SoState * state)
     (SoMaterialBindingElement::Binding) SoMaterialBindingElement::get(state);
 
   switch (matbind) {
-  case SoNormalBindingElement::OVERALL:
+  case SoMaterialBindingElement::OVERALL:
     binding = OVERALL;
     break;
-  case SoNormalBindingElement::PER_VERTEX:
+  case SoMaterialBindingElement::PER_VERTEX:
     binding = PER_VERTEX;
     break;
-  case SoNormalBindingElement::PER_VERTEX_INDEXED:
+  case SoMaterialBindingElement::PER_VERTEX_INDEXED:
     binding = PER_VERTEX_INDEXED;
     break;
-  case SoNormalBindingElement::PER_PART:
+  case SoMaterialBindingElement::PER_PART:
     binding = PER_SEGMENT;
     break;
-  case SoNormalBindingElement::PER_PART_INDEXED:
+  case SoMaterialBindingElement::PER_PART_INDEXED:
     binding = PER_SEGMENT_INDEXED;
     break;
-  case SoNormalBindingElement::PER_FACE:
+  case SoMaterialBindingElement::PER_FACE:
     binding = PER_LINE;
     break;
-  case SoNormalBindingElement::PER_FACE_INDEXED:
+  case SoMaterialBindingElement::PER_FACE_INDEXED:
     binding = PER_LINE_INDEXED;
     break;
   default:

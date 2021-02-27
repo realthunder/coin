@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 set(COIN_MAJOR_VERSION 4)
 set(COIN_MINOR_VERSION 0)
-set(COIN_MICRO_VERSION 0)
+set(COIN_MICRO_VERSION 1)
 set(COIN_BETA_VERSION)
 set(COIN_VERSION ${COIN_MAJOR_VERSION}.${COIN_MINOR_VERSION}.${COIN_MICRO_VERSION}${COIN_BETA_VERSION})
 
@@ -195,6 +195,11 @@ if(COIN_BUILD_MAC_X11)
     list(APPEND COIN_TARGET_LINK_LIBRARIES ${X11_LIBRARIES} ${X11_GL_LIB} ${X11_GLU_LIB})
   endif()
 else()
+  if(UNIX AND NOT APPLE)
+    find_package(X11 REQUIRED)
+    list(APPEND COIN_TARGET_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+    list(APPEND COIN_TARGET_LINK_LIBRARIES ${X11_LIBRARIES})
+  endif()
   find_package(OpenGL REQUIRED)
   if(OPENGL_FOUND)
     set(HAVE_OPENGL 1)
@@ -452,10 +457,14 @@ if(WIN32)
     set(COIN_DEFAULT_POSTFIX ${COIN_DEFAULT_STATIC_POSTFIX})
     set(COIN_LIBRARY_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
   endif()
-  set(CMAKE_RELEASE_POSTFIX ${COIN_DEFAULT_POSTFIX})
-  set(CMAKE_MINSIZEREL_POSTFIX ${COIN_DEFAULT_POSTFIX})
-  set(CMAKE_RELWITHDEBINFO_POSTFIX ${COIN_DEFAULT_POSTFIX})
-  set(CMAKE_DEBUG_POSTFIX ${COIN_DEFAULT_POSTFIX}d)
+  set(CMAKE_RELEASE_POSTFIX "${COIN_DEFAULT_POSTFIX}"
+    CACHE STRING "Default filename postfix for libraries under configuration Release")
+  set(CMAKE_MINSIZEREL_POSTFIX "${COIN_DEFAULT_POSTFIX}"
+    CACHE STRING "Default filename postfix for libraries under configuration MinSizeRel")
+  set(CMAKE_RELWITHDEBINFO_POSTFIX "${COIN_DEFAULT_POSTFIX}"
+    CACHE STRING "Default filename postfix for libraries under configuration RelWithDebInfo")
+  set(CMAKE_DEBUG_POSTFIX "${COIN_DEFAULT_POSTFIX}d"
+    CACHE STRING "Default filename postfix for libraries under configuration Debug")
 
   set(COIN_RELEASE_SYSTEM_LIBRARY_NAME Coin${CMAKE_RELEASE_POSTFIX}${COIN_LIBRARY_SUFFIX})
   set(COIN_DEBUG_SYSTEM_LIBRARY_NAME Coin${CMAKE_DEBUG_POSTFIX}${COIN_LIBRARY_SUFFIX})
@@ -740,20 +749,16 @@ if(HAVE_WINDLL_RUNTIME_BINDING OR HAVE_DYLD_RUNTIME_BINDING OR HAVE_DLD_LIB OR H
   set(HAVE_DYNAMIC_LINKING 1)
 endif()
 
-set(HASH_QUOTING_SRC_FILE "
-  #include <string.h>
+check_cxx_source_compiles("
   #define TEST_QUOTE(str) #str
-  int main(void) { return strcmp(\"sim\", TEST_QUOTE(sim)); }
-")
-check_c_source_runs("${HASH_QUOTING_SRC_FILE}" HAVE_HASH_QUOTING)
+  int main(void) { char xx[] = TEST_QUOTE(str) \"xxx\"; return 0; }
+" HAVE_HASH_QUOTING)
 
 if(NOT HAVE_HASH_QUOTING)
-  set(APOSTROPHES_QUOTING_SRC_FILE "
-    #include <string.h>
+  check_cxx_source_compiles("
     #define TEST_QUOTE(str) \"str\"
-    int main(void) { return strcmp(\"sim\", TEST_QUOTE(sim)); }
-  ")
-  check_c_source_runs("${APOSTROPHES_QUOTING_SRC_FILE}" HAVE_APOSTROPHES_QUOTING)
+    int main(void) { char xx[] = (TEST_QUOTE(\"str\") \"xxx\"; return 0; }
+  " HAVE_APOSTROPHES_QUOTING)
 endif()
 
 if(HAVE_3DS_IMPORT_CAPABILITIES)

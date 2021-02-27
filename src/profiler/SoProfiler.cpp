@@ -32,7 +32,7 @@
 
 
 /*!
-  \page profiling_intro Scene Graph Profiling
+  \page coin_profiling_intro Scene Graph Profiling
 
   <h2>Enabling profiling in Coin</h2>
 
@@ -101,7 +101,7 @@
   \class SoProfiler SoProfiler.h Profiler/SoProfiler.h
   \brief Main static class for initializing the scene graph profiling subsystem.
 
-  \ingroup profiler
+  \ingroup coin_profiler
 */
 
 namespace {
@@ -400,7 +400,7 @@ SoProfilerP::parseCoinProfilerOverlayVariable(void)
           profiler::console::lines = atoi(subargs[0].data());
           if (profiler::console::lines < 0 || profiler::console::lines > 512) {
             SoDebugError::postWarning("SoProfiler",
-                                      "Number of lines out of range. Seting 20.",
+                                      "Number of lines out of range. Setting 20.",
                                       profiler::console::lines);
             profiler::console::lines = 20;
           }

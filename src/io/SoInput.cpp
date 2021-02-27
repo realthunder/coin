@@ -34,7 +34,7 @@
   \class SoInput SoInput.h Inventor/SoInput.h
   \brief The SoInput class is an abstraction of file import functionality.
 
-  \ingroup general
+  \ingroup coin_general
 
   This class takes care of most of the chores of doing data import in Coin.
   It puts a layer of abstraction over the read operations to make it
@@ -193,10 +193,10 @@ SoInput::SoInput(void)
  */
 SoInput::SoInput(SoInput * dictIn)
 {
+  this->constructorsCommon();
   if (dictIn && dictIn->filestack.getLength()) {
     PRIVATE(this)->copied_references = dictIn->getTopOfStack()->getReferences();
   }
-  this->constructorsCommon();
 }
 
 /*!

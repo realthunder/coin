@@ -34,10 +34,10 @@
   \class SoShaderObject SoShaderObject.h Inventor/nodes/SoShaderObject.h
   \brief The SoShaderObject class is the superclass for all shader classes in Coin.
 
-  See \ref coin_shaders "Shaders in Coin" for more information
+  See \ref coin_shaders_page "Shaders in Coin" for more information
   on how to set up a scene graph with shaders.
 
-  \ingroup shaders
+  \ingroup coin_shaders
 
   \sa SoShaderProgram
 */
@@ -715,7 +715,7 @@ SoShaderObjectP::updateAllParameters(const uint32_t cachecontext)
   shaderobject->setParametersDirty(FALSE);
 }
 
-// Update state matrix paramaters
+// Update state matrix parameters
 void
 SoShaderObjectP::updateStateMatrixParameters(const uint32_t cachecontext, SoState *state)
 {

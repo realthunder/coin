@@ -34,7 +34,7 @@
   \class SoAntiSquish SoAntiSquish.h Inventor/nodes/SoAntiSquish.h
   \brief The SoAntiSquish class is used to reset to uniform scaling.
 
-  \ingroup nodes
+  \ingroup coin_nodes
 
   When traversed, this node replaces the scale vector of the matrix
   with uniform values, based on one of the SoAntiSquish::Sizing
@@ -319,7 +319,7 @@ SoAntiSquish::getUnsquishingMatrix(const SbMatrix & squishedmatrix,
     }
   default:
     assert(0 && "unknown sizing parameter");
-    val = (scale[0] + scale[1] + scale[2]) / 3.0f; // use avarage
+    val = (scale[0] + scale[1] + scale[2]) / 3.0f; // use average
     break;
   }
   scale[0] = scale[1] = scale[2] = val;

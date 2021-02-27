@@ -40,7 +40,7 @@
   \class SoInteractionKit SoInteractionKit.h Inventor/nodekits/SoInteractionKit.h
   \brief The SoInteractionKit class is a base class for draggers.
 
-  \ingroup nodekits
+  \ingroup coin_nodekits
 
   This nodekit class makes it possible to set surrogate paths for
   parts. Instead of creating new geometry for the dragger, it is
@@ -696,7 +696,7 @@ SoInteractionKit::setUpConnections(SbBool onoff, SbBool doitalways)
 SbBool
 SoInteractionKit::setPart(const int partNum, SoNode * node)
 {
-  // Overriden to detect when part changes value. If a substitute path
+  // Overridden to detect when part changes value. If a substitute path
   // for that part exists, it must be cleared.
 
   PRIVATE(this)->removeSurrogatePath(this->getNodekitCatalog()->getName(partNum));

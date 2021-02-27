@@ -34,7 +34,7 @@
   \class SoGLRenderAction SoGLRenderAction.h Inventor/actions/SoGLRenderAction.h
   \brief The SoGLRenderAction class renders the scene graph with OpenGL calls.
 
-  \ingroup actions
+  \ingroup coin_actions
 
   Applying this method at a root node for a scene graph, path or
   path list will render all geometry contained within that instance to
@@ -58,7 +58,6 @@
 
 // *************************************************************************
 
-/*! \file SoGLRenderAction.h */
 #include <Inventor/actions/SoGLRenderAction.h>
 
 #ifdef HAVE_CONFIG_H
@@ -2142,7 +2141,7 @@ SoGLRenderActionP::doSortedLayersBlendRendering(const SoState * state, SoNode * 
 
   }
 
-  // Blend together the aquired RGBA layers
+  // Blend together the acquired RGBA layers
   if (glue->has_arb_fragment_program && !this->usenvidiaregistercombiners)
     renderSortedLayersFP(state);
   else

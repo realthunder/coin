@@ -34,7 +34,7 @@
   \class SoFont SoFont.h Inventor/nodes/SoFont.h
   \brief The SoFont class is an appearance node for setting fonts.
 
-  \ingroup nodes
+  \ingroup coin_nodes
 
   Successive text rendering nodes (like SoText2, SoText3, SoAsciiText,
   etc) will use the font specified from an SoFont node when
@@ -147,7 +147,7 @@
 
   On Windows the Win32 GDI library is used. \e FreeType and \e
   Fontconfig are dynamically loaded on demand by Coin if font support
-  are requested by a node. When font support is loaded on Windows,
+  is requested by a node. When font support is loaded on Windows,
   FreeType will have precedence over Win32 if located. This can be
   prevented by setting the "COIN_FORCE_FREETYPE_OFF" environment
   variable to 1. When using FreeType, you need FreeType version 2.1 or

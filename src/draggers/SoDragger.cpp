@@ -40,7 +40,7 @@
   \class SoDragger SoDragger.h Inventor/draggers/SoDragger.h
   \brief The SoDragger class is the base class for all draggers.
 
-  \ingroup draggers
+  \ingroup coin_draggers
 
   Draggers is a mechanism used for letting the end-users of your
   application code interact with elements in 3D, by scaling, rotating
@@ -164,7 +164,7 @@
 */
 
 //   FIXME: more class doc! The general concept of draggers should be
-//   explained in more detail here -- just refering to the Inventor
+//   explained in more detail here -- just referring to the Inventor
 //   Mentor is a cop-out. And include at least one general usage example
 //   and some screenshots.  20011219 mortene.
 
@@ -203,7 +203,6 @@
 
 // FIXME: document DraggerCB typedef? 20010909 mortene.
 
-/*! \file SoDragger.h */
 #include <Inventor/draggers/SoDragger.h>
 
 #include <Inventor/draggers/SoCenterballDragger.h>

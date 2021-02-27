@@ -35,7 +35,7 @@
   \class SoCalculator Inventor/engines/SoCalculator.h
   \brief General purpose calculator for floats and 3D float vectors.
 
-  \ingroup engines
+  \ingroup coin_engines
 
   The SoCalculator uses the values from the input fields (which are
   either single floating point values or vectors) as variables in the
@@ -614,7 +614,7 @@ SoCalculator::inputChanged(SoField *which)
   }
 }
 
-// callback from evaluator. Reads values from temporay registers
+// callback from evaluator. Reads values from temporary registers
 void
 SoCalculator::readfieldcb(const char *fieldname, float *data, void *userdata)
 {

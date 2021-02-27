@@ -35,7 +35,7 @@
   \brief The SbBox2d class is a 2 dimensional box with double precision
   corner coordinates.
 
-  \ingroup base
+  \ingroup coin_base
 
   This box class is used by many other classes in Coin for data
   exchange and storage. It provides two box corners with double
@@ -467,8 +467,8 @@ SbBox2d::getClosestPoint(const SbVec2d & point) const
 {
   if (isEmpty()) return point;
 
-  float halfwidth = (this->maxpt[0] - this->minpt[0]) / 2.0;
-  float halfheight = (this->maxpt[1] - this->minpt[1]) / 2.0;
+  double halfwidth = (this->maxpt[0] - this->minpt[0]) / 2.0;
+  double halfheight = (this->maxpt[1] - this->minpt[1]) / 2.0;
 
   SbVec2d center = this->getCenter();
   if (point == center)
@@ -477,8 +477,8 @@ SbBox2d::getClosestPoint(const SbVec2d & point) const
   SbVec2d vec = point - center;
 
   SbVec2d absvec;
-  absvec[0] = halfwidth > 0.0f ? fabs(vec[0] / halfwidth) : fabs(vec[0]);
-  absvec[1] = halfheight > 0.0f ? fabs(vec[1] / halfheight) : fabs(vec[1]);
+  absvec[0] = halfwidth > 0.0 ? fabs(vec[0] / halfwidth) : fabs(vec[0]);
+  absvec[1] = halfheight > 0.0 ? fabs(vec[1] / halfheight) : fabs(vec[1]);
 
   SbVec2d closest;
 

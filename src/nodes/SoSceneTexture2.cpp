@@ -319,6 +319,14 @@
 #include "nodes/SoSubNodeP.h"
 #include "elements/SoTextureScalePolicyElement.h"
 
+#ifndef GL_SAMPLES
+#   define GL_SAMPLES                        0x80A9
+#   define GL_SAMPLE_BUFFERS                 0x80A8
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER_EXT
+#   define GL_READ_FRAMEBUFFER_EXT           0x8CA8
+#   define GL_DRAW_FRAMEBUFFER_EXT           0x8CA9
+#endif
 
 // FIXME: The multicontex handling in this class is very messy. Clean
 // it up.  pederb, 2010-07-12

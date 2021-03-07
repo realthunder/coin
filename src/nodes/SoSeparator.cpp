@@ -767,7 +767,10 @@ SoSeparator::GLRenderInPath(SoGLRenderAction * action)
     state->push();
     int childidx = 0;
     for (int i = 0; i < numindices; i++) {
-      for (; childidx < indices[i] && !action->hasTerminated(); childidx++) {
+      int stop = indices[i];
+      if (childidx > stop)
+        continue;
+      for (; childidx < stop && !action->hasTerminated(); childidx++) {
         SoNode * offpath = childarray[childidx];
         if (offpath->affectsState()) {
           action->pushCurPath(childidx, offpath);

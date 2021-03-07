@@ -306,6 +306,8 @@ SoChildList::traverseInPath(SoAction * const action,
 
   for (int i = 0; i < numindices && !action->hasTerminated(); i++) {
     int stop = indices[i];
+    if (childidx > stop)
+        continue;
     for (; childidx < stop && !action->hasTerminated(); childidx++) {
       // we are off path. Check if node affects state before traversing
       SoNode * node = (*this)[childidx];

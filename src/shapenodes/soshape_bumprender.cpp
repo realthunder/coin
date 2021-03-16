@@ -449,10 +449,22 @@ soshape_bumprender::renderBumpSpecular(SoState * state,
         SoGLShaderProgramElement::enable(state, FALSE);
         restoreShader = true;
     }
+    SoPolygonOffsetElement::Style style;
+    float factor;
+    float units;
+    SbBool on;
+    SoPolygonOffsetElement::get(state, factor, units, style, on);
+    if (on && (style & SoPolygonOffsetElement::FILLED)) {
+        factor *= 1.5f;
+        units += 1.0f;
+    } else {
+        factor = 1.0f;
+        units = 1.0f;
+    }
     SoPolygonOffsetElement::set(state, 
                                 0, 
-                                1.0,
-                                1.0,
+                                factor,
+                                units,
                                 SoPolygonOffsetElement::FILLED,
                                 TRUE);
   }
@@ -625,10 +637,22 @@ soshape_bumprender::renderBump(SoState * state,
         SoGLShaderProgramElement::enable(state, FALSE);
         restoreShader = true;
     }
+    SoPolygonOffsetElement::Style style;
+    float factor;
+    float units;
+    SbBool on;
+    SoPolygonOffsetElement::get(state, factor, units, style, on);
+    if (on && (style & SoPolygonOffsetElement::FILLED)) {
+        factor *= 1.5f;
+        units += 2.0f;
+    } else {
+        factor = 1.0f;
+        units = 1.0f;
+    }
     SoPolygonOffsetElement::set(state, 
                                 0, 
-                                1.0,
-                                1.0,
+                                factor,
+                                units,
                                 SoPolygonOffsetElement::FILLED,
                                 TRUE);
   }

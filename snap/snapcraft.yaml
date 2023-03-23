@@ -1,0 +1,80 @@
+name: coin3d-realthunder
+base: core20
+adopt-info: version
+summary: Coin3D and its python binding with improved shadow renderering
+description: |
+  - Coin3D
+  - Pivy
+grade: stable
+confinement: strict
+
+environment:
+  GIT_EXEC_PATH: $SNAP/usr/lib/git-core
+  GIT_TEMPLATE_DIR: $SNAP/usr/share/git-core/templates
+  GIT_CONFIG_NOSYSTEM: 1
+  PYTHONPYCACHEPREFIX: $SNAP_USER_COMMON/.pycache
+  PYTHONUSERBASE: $SNAP_USER_COMMON/.local
+  PIP_USER: 1
+  PYTHONPATH: &pypath $PYTHONUSERBASE/lib/python3.8/site-packages:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages
+  SNAP_PYTHONPATH: *pypath
+  QT_QPA_PLATFORM: xcb # Coin3D cannot run on Wayland
+
+parts:
+  version:
+    plugin: nil
+    build-packages:
+      - git
+    override-build: |
+      cd "${SNAPCRAFT_PROJECT_DIR}"
+      git_hash=$(git rev-parse --short=8 HEAD)
+      snapcraftctl set-version "${git_hash}"
+
+  coin3d:
+    plugin: cmake
+    source: .
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCOIN_BUILD_TESTS=OFF
+      - -DCMAKE_CXX_STANDARD=98
+
+  pivy:
+    after: [coin3d]
+    plugin: cmake
+    source: https://github.com/coin3d/pivy.git
+    source-tag: "0.6.6"
+    build-packages:
+      - g++
+      - swig
+      - python3-dev
+      - libboost-dev
+      - freeglut3-dev
+    override-build: |
+      # out of source builds fail for some reason:
+      # https://github.com/coin3d/pivy/issues/72
+      # let's do an in-source build  instead
+      cd $SNAPCRAFT_PART_SRC
+      cmake \
+        -DCMAKE_FIND_ROOT_PATH=/snap/kde-frameworks-5-99-qt-5-15-7-core20-sdk/current \
+        -DCMAKE_PREFIX_PATH="$SNAPCRAFT_STAGE" \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release \
+        .
+      cmake --build . -- -j${SNAPCRAFT_PARALLEL_BUILD_COUNT}
+      DESTDIR="$SNAPCRAFT_PART_INSTALL" cmake --build  . --target install
+
+  cleanup:
+    after: [coin3d, pivy]
+    plugin: nil
+    build-snaps: [kde-frameworks-5-99-qt-5-15-7-core20]
+    override-prime: |
+      set -eux
+      for snap in "kde-frameworks-5-99-qt-5-15-7-core20"; do  # List all content-snaps you're using here
+        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" "$SNAPCRAFT_PRIME/usr/{}" \;
+      done
+      for cruft in bug lintian man; do
+        rm -rf $SNAPCRAFT_PRIME/usr/share/$cruft
+      done
+      find $SNAPCRAFT_PRIME/usr/share -type d -empty -delete || true
+      find $SNAPCRAFT_PRIME/usr/lib -type f,l \
+        -name 'libQt*.so*' -delete || true # remove all Qt libs pulled in from Ubuntu repos

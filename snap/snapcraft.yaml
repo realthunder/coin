@@ -1,12 +1,13 @@
 name: coin3d-realthunder
 base: core20
 adopt-info: version
-summary: Coin3D and its python binding with improved shadow renderering
+summary: Coin3D/pivy with improved shadow rendering
 description: |
   - Coin3D
   - Pivy
 grade: stable
 confinement: strict
+website: https://github.com/realthunder/coin.git
 
 environment:
   GIT_EXEC_PATH: $SNAP/usr/lib/git-core
@@ -37,6 +38,18 @@ parts:
       - -DCMAKE_BUILD_TYPE=Release
       - -DCOIN_BUILD_TESTS=OFF
       - -DCMAKE_CXX_STANDARD=98
+    build-packages:
+      - g++
+      - libboost-dev
+      - freeglut3-dev
+    stage-packages:
+      - libglvnd0
+      - libglx0
+      - libopengl0
+      - libx11-6
+      - libxau6
+      - libxcb1
+      - libxdmcp6
 
   pivy:
     after: [coin3d]
@@ -47,8 +60,6 @@ parts:
       - g++
       - swig
       - python3-dev
-      - libboost-dev
-      - freeglut3-dev
     override-build: |
       # out of source builds fail for some reason:
       # https://github.com/coin3d/pivy/issues/72

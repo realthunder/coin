@@ -1,0 +1,45 @@
+name: Publish conda
+
+on:
+  push:
+    tags:
+      - "*"
+
+  workflow_dispatch:
+
+jobs:
+  conda_deployment_with_new_tag:
+    name: Conda deployment of package for platform ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # os: [macOS-latest, ubuntu-latest, windows-latest]
+        # python-version: ["3.8", "3.9", "3.10"]
+        os: [windows-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Conda environment creation and activation
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          # mamba-version: "*"
+          conda-build-version: "*"
+          environment-file: conda/build_env.yaml    # Path to the build conda environment
+          auto-update-conda: false
+          auto-activate-base: false
+          show-channel-urls: true
+          # use-mamba: true
+      # - name: Install mamba build
+      #   shell: bash -el {0}
+      #   run: mamba install boa -c conda-forge
+      - name: Build and upload the conda packages
+        uses: realthunder/action-build-and-upload-conda-packages@main
+        with:
+          meta_yaml_dir: conda/00-coin conda/01-soqt conda/02-pivy
+          # mambabuild: true
+          python-version: ${{ matrix.python-version }} # Values previously defined in `matrix`
+          user: realthunder
+          label: main
+          token: ${{ secrets.ANACONDA_TOKEN }} # Replace with the right name of your secret

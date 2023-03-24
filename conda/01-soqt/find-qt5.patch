@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 064574e..17ac919 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -19,7 +19,7 @@ option(USE_QT5 "Prefer Qt5 over Qt4 if available" ON)
+ option(WITH_STATIC_DEFAULTS "Enable defaults from being statically linked in" ON)
+ 
+ if(USE_QT5)
+-	find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets QUIET)
++	find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets)
+ endif()
+ 
+ if(Qt5_FOUND)

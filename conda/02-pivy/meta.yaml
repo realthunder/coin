@@ -1,0 +1,53 @@
+{% set name = "pivy-rt" %}
+{% set version = "0.6.7" %}
+{% set sha256 = "37e33d85117aac27640e011df74ddcd77f270428300df916b46ee5c50645d582" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  fn: {{ name }}.tar.gz
+  url: https://github.com/FreeCAD/pivy/archive/{{ version }}.tar.gz
+  sha256: {{ sha256 }}
+
+build:
+  number: 5
+
+requirements:
+  build:
+    - {{ compiler("cxx") }}
+    - {{ cdt('mesa-libgl-devel') }}      # [linux]
+    - msinttypes      # [win]
+    - cmake
+    - ninja
+    - swig
+  host:
+    - python
+    - coin3d-rt
+    - soqt-rt
+    - qt
+    - moab * mpi_mpich_tempest_*   # [osx]
+  run:
+    - python
+    - coin3d-rt
+    - qt
+    - pyside2
+    - soqt-rt
+    - moab * mpi_mpich_tempest_* # [osx]
+
+test:
+  imports:
+    - sys
+    - pivy.coin
+    # - pivy.gui.soqt
+
+about:
+  home: https://github.com/realthunder/coin
+  license: ISC
+  license_file: LICENSE
+  summary: python bindings to coin3d with enhanced shadow rendering.
+
+extra:
+  recipe-maintainers:
+    - realthunder

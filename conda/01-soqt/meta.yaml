@@ -1,0 +1,68 @@
+{% set name = "soqt-rt" %}
+{% set version = "1.6.0" %}
+{% set sha256 = "9f535af59f07c907022815679681bd345c9dec2f408c74833f6b1b24bca40e1f" %}
+
+package:
+    name: {{ name }}
+    version: {{ version }}
+
+source:
+    - url: https://github.com/coin3d/soqt/releases/download/SoQt-{{ version }}/soqt-{{ version }}-src.tar.gz
+      sha256: {{ sha256 }}
+      patches:
+        - 0001-make-cpack-optional-and-disabled-by-default.patch
+        - gl_private_linking.patch  # [linux]
+
+
+build:
+    number: 1
+
+requirements:
+    build:
+        - {{ compiler("cxx") }}
+        - {{ cdt('mesa-libgl-devel') }}  # [linux]
+        - {{ cdt('mesa-dri-drivers') }}  # [linux]
+        - {{ cdt('libselinux') }}  # [linux]
+        - {{ cdt('libxdamage') }}  # [linux]
+        - {{ cdt('libxxf86vm') }}  # [linux]
+        - {{ cdt('libxext') }}     # [linux]
+        - ninja
+        - cmake
+    host:
+        - qt-main
+        - coin3d-rt
+        
+    run:
+        - qt-main
+        - coin3d-rt
+test:
+    requires:
+        - cmake
+        - ninja
+        - {{ compiler("cxx") }}
+        - {{ cdt('mesa-libgl-devel') }}  # [linux]
+        - {{ cdt('mesa-dri-drivers') }}  # [linux]
+        - {{ cdt('libselinux') }}  # [linux]
+        - {{ cdt('libxdamage') }}  # [linux]
+        - {{ cdt('libxxf86vm') }}  # [linux]
+        - {{ cdt('libxext') }}     # [linux]
+
+    files:
+        - CMakeLists.txt
+
+    commands:
+        - cmake -G "Ninja" .
+
+about:
+    home: https://github.com/realthunder/coin
+    license: BSD-3-Clause
+    license_family: BSD
+    license_file: COPYING
+    summary: SoQt library for Coin3D with enhanced shadow rendering.
+    description: SoQt is a Qt GUI component toolkit library for Coin.  It is also compatible
+                 with SGI and TGS Open Inventor, and the API is based on the API of the
+                 InventorXt GUI component toolkit.
+
+extra:
+    recipe-maintainers:
+        - realthunder

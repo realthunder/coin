@@ -1,6 +1,6 @@
 {% set name = "pivy-rt" %}
-{% set version = "0.6.7" %}
-{% set sha256 = "37e33d85117aac27640e011df74ddcd77f270428300df916b46ee5c50645d582" %}
+{% set version = "0.6.8" %}
+{% set sha256 = "c443dd7dd724b0bfa06427478b9d24d31e0c3b5138ac5741a2917a443b28f346" %}
 
 package:
   name: {{ name }}
@@ -8,7 +8,7 @@ package:
 
 source:
   fn: {{ name }}.tar.gz
-  url: https://github.com/FreeCAD/pivy/archive/{{ version }}.tar.gz
+  url: https://github.com/coin3d/pivy/archive/{{ version }}.tar.gz
   sha256: {{ sha256 }}
 
 build:

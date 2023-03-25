@@ -1,4 +1,4 @@
-cd superglue
+cd superglu
 mkdir build
 cd build
 

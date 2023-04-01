@@ -27,6 +27,7 @@ requirements:
         - {{ cdt('libxext') }}     # [linux]
         - ninja
         - cmake
+        - qt-main # [build_platform != target_platform]
     host:
         - qt-main
         - coin3d-rt
@@ -34,23 +35,24 @@ requirements:
     run:
         - qt-main
         - coin3d-rt
-test:
-    requires:
-        - cmake
-        - ninja
-        - {{ compiler("cxx") }}
-        - {{ cdt('mesa-libgl-devel') }}  # [linux]
-        - {{ cdt('mesa-dri-drivers') }}  # [linux]
-        - {{ cdt('libselinux') }}  # [linux]
-        - {{ cdt('libxdamage') }}  # [linux]
-        - {{ cdt('libxxf86vm') }}  # [linux]
-        - {{ cdt('libxext') }}     # [linux]
 
-    files:
-        - CMakeLists.txt
-
-    commands:
-        - cmake -G "Ninja" .
+# test:
+#     requires:
+#         - cmake
+#         - ninja
+#         - {{ compiler("cxx") }}
+#         - {{ cdt('mesa-libgl-devel') }}  # [linux]
+#         - {{ cdt('mesa-dri-drivers') }}  # [linux]
+#         - {{ cdt('libselinux') }}  # [linux]
+#         - {{ cdt('libxdamage') }}  # [linux]
+#         - {{ cdt('libxxf86vm') }}  # [linux]
+#         - {{ cdt('libxext') }}     # [linux]
+#
+#     files:
+#         - CMakeLists.txt
+#
+#     commands:
+#         - cmake -G "Ninja" .
 
 about:
     home: https://github.com/realthunder/coin

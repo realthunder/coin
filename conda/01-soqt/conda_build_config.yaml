@@ -4,3 +4,5 @@ python:
 target_platform:
     - linux-aarch64 # [linux]
     - osx-arm64 # [osx]
+MACOSX_DEPLOYMENT_TARGET:  # [osx]
+    - '10.12'              # [osx]

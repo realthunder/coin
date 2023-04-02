@@ -1,6 +1,6 @@
 {% set name = "soqt-rt" %}
 {% set version = "1.6.0" %}
-{% set sha256 = "5d9211db2f6a02db648b4f9a7fc4129082400069d4c910f49c5a698da133d948" %}
+{% set sha256 = "ee3d2a9a81c0d83d43b39b27ec353ef262ad2969521ac142b88f828095cc8757" %}
 
 package:
     name: {{ name }}

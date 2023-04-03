@@ -1,8 +1,1 @@
-python:
-    - 3.8 # [win]
-    - 3.10
-target_platform:
-    - linux-aarch64 # [linux]
-    - osx-arm64 # [osx]
-MACOSX_DEPLOYMENT_TARGET:  # [osx]
-    - '10.12'              # [osx]
+../conda_build_config.yaml

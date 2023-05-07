@@ -15,18 +15,18 @@ jobs:
       # fail-fast: false
       matrix:
         os: [macos-11, ubuntu-latest, windows-latest]
-        python-version: ["3.10"]
+        python-version: ["3.11"]
         arch : ["64"]
         include:
-          - os: windows-latest
-            python-version: "3.8"
-            arch : "64"
+          # - os: windows-latest
+          #   python-version: "3.8"
+          #   arch : "64"
           - os: ubuntu-latest
             arch: aarch64
-            python-version: "3.10"
+            python-version: "3.11"
           - os: macos-11
             arch: arm64
-            python-version: "3.10"
+            python-version: "3.11"
 
     steps:
       - uses: actions/checkout@v3
@@ -34,17 +34,14 @@ jobs:
         uses: realthunder/setup-miniconda@main
         with:
           python-version: ${{ matrix.python-version }}
-          conda-build-version: "*"
-          # mamba-version: "*"
-          # use-mamba: true
-          # miniforge-version: latest
           environment-file: conda/build_env.yaml    # Path to the build conda environment
           auto-update-conda: false
           auto-activate-base: false
           show-channel-urls: true
-      # - name: Install mamba build
-      #   shell: bash -el {0}
-      #   run: mamba install boa -c conda-forge
+          miniforge-variant: Mambaforge
+      - name: Install mamba build
+        shell: bash -el {0}
+        run: mamba install boa -c conda-forge
       - name: Set build variant
         shell: bash -el {0}
         run: |
@@ -63,7 +60,7 @@ jobs:
           meta_yaml_dir: conda/00-coin conda/01-soqt conda/02-pivy
           python-version: ${{ matrix.python-version }}
           variant_conf: conda/variant.yaml
-          # mambabuild: true
+          mambabuild: true
           user: realthunder
           label: main
           token: ${{ secrets.ANACONDA_TOKEN }} # Replace with the right name of your secret

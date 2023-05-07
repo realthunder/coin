@@ -1,9 +1,9 @@
-name: Publish conda
+name: Publish pivy
 
 on:
   push:
     tags:
-      - "*all"
+      - "*pivy"
 
   workflow_dispatch:
 
@@ -16,9 +16,9 @@ jobs:
         python-version: ["3.11"]
         arch : ["64"]
         include:
-          - os: windows-latest
-            python-version: "3.8"
-            arch : "64"
+          # - os: windows-latest
+          #   python-version: "3.8"
+          #   arch : "64"
           - os: ubuntu-latest
             arch: aarch64
             python-version: "3.11"
@@ -30,5 +30,7 @@ jobs:
       os: ${{ matrix.os }}
       arch: ${{ matrix.arch }}
       python-version: ${{ matrix.python-version }}
+      recipe: conda/02-pivy
+      use_mamba: true
     secrets:
       token: ${{ secrets.ANACONDA_TOKEN }}

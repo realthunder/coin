@@ -3,7 +3,7 @@ name: Publish Snap
 on:
   push:
     tags:
-      - "*"
+      - "*snap"
     
 jobs:
   publish_amd64:

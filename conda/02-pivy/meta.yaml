@@ -28,11 +28,13 @@ requirements:
     - python
     - coin3d-rt
     - soqt-rt
-    - qt-main
+    - qt-main        # [not win]
+    - qt-main 5.15.4 # [win]
   run:
     - python
     - coin3d-rt
-    - qt-main
+    - qt-main        # [not win]
+    - qt-main 5.15.4 # [win]
     - pyside2
     - soqt-rt
 

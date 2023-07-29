@@ -16,9 +16,9 @@ jobs:
         python-version: ["3.11"]
         arch : ["64"]
         include:
-          # - os: windows-latest
-          #   python-version: "3.8"
-          #   arch : "64"
+          - os: windows-latest
+            python-version: "3.8"
+            arch : "64"
           - os: ubuntu-latest
             arch: aarch64
             python-version: "3.11"

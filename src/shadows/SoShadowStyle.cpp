@@ -49,6 +49,7 @@
 // *************************************************************************
 
 #include <Inventor/annex/FXViz/nodes/SoShadowStyle.h>
+#include <Inventor/actions/SoCallbackAction.h>
 
 #include <cstdio>
 
@@ -128,11 +129,18 @@ SoShadowStyle::initClass(void)
 {
   SO_NODE_INTERNAL_INIT_CLASS(SoShadowStyle, SO_FROM_COIN_2_5);
   SO_ENABLE(SoGLRenderAction, SoShadowStyleElement);
+  SO_ENABLE(SoCallbackAction, SoShadowStyleElement);
 }
 
 // Doc from superclass.
 void
 SoShadowStyle::GLRender(SoGLRenderAction * action)
+{
+  doAction(action);
+}
+
+void
+SoShadowStyle::doAction(SoAction *action)
 {
   SoState * state = action->getState();
 
@@ -141,7 +149,11 @@ SoShadowStyle::GLRender(SoGLRenderAction * action)
                             (int) this->style.getValue());
 }
 
-
+void
+SoShadowStyle::callback(SoCallbackAction * action)
+{
+  doAction(action);
+}
 
 #ifdef COIN_TEST_SUITE
 

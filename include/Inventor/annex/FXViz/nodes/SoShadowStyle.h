@@ -56,7 +56,9 @@ public:
   
   SoSFEnum style;
 
+  virtual void doAction(SoAction * action);
   virtual void GLRender(SoGLRenderAction * action);
+  virtual void callback(SoCallbackAction * action);
 
 protected:
   virtual ~SoShadowStyle();

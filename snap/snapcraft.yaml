@@ -28,7 +28,7 @@ parts:
     override-build: |
       cd "${CRAFT_PROJECT_DIR}"
       git_hash=$(git rev-parse --short=8 HEAD)
-      craftctl set-version "${git_hash}"
+      craftctl set version="${git_hash}"
 
   coin3d:
     plugin: cmake

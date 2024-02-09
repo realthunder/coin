@@ -55,7 +55,7 @@ parts:
     after: [coin3d]
     plugin: cmake
     source: https://github.com/coin3d/pivy.git
-    source-tag: "0.6.6"
+    source-tag: "0.6.8"
     build-packages:
       - g++
       - swig

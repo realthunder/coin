@@ -14,7 +14,7 @@ source:
 
 
 build:
-    number: 3
+    number: 4
 
 requirements:
     build:
@@ -29,13 +29,11 @@ requirements:
         - cmake
         - qt-main # [build_platform != target_platform]
     host:
-        - qt-main        # [not win]
-        - qt-main 5.15.6 # [win]
+        - qt-main
         - coin3d-rt
         
     run:
-        - qt-main        # [not win]
-        - qt-main 5.15.6 # [win]
+        - qt-main
         - coin3d-rt
 
 # test:

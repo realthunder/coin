@@ -18,23 +18,23 @@ build:
 requirements:
     build:
         - {{ compiler('cxx') }}
+        # - {{ stdlib("c") }}
         - {{ cdt('mesa-libgl-devel') }}  # [linux]
         - {{ cdt('mesa-dri-drivers') }}  # [linux]
         - {{ cdt('libxdamage') }}  # [linux]
         - {{ cdt('libselinux') }}  # [linux]
         - {{ cdt('libXxf86vm') }}  # [linux]
+        - {{ cdt('libxi-devel') }} # [linux]
+        - {{ cdt('libxext') }}     # [linux]
         - cmake 3.18.*
         - ninja
     host:
         - boost-cpp
         - libglu  # [linux]
-        - xorg-libxt  # [linux]
-        - xorg-libxi  # [linux]
+        - xorg-xproto   # [linux]
         - expat
     run:
         - libglu  # [linux]
-        - xorg-libxt  # [linux]
-        - xorg-libxi  # [linux]
         - expat
 
 # test:

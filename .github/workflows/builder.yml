@@ -34,11 +34,13 @@ jobs:
         uses: realthunder/setup-miniconda@main
         with:
           python-version: ${{ inputs.python-version }}
-          miniforge-variant: Mambaforge
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
           environment-file: conda/build_env.yaml    # Path to the build conda environment
           auto-update-conda: false
           auto-activate-base: false
           show-channel-urls: true
+          channel-priority: "strict"
       - name: Install mamba build
         if: inputs.use_mamba
         shell: bash -el {0}

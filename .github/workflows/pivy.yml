@@ -12,7 +12,7 @@ jobs:
     strategy:
       # fail-fast: false
       matrix:
-        os: [macos-11, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ["3.11"]
         arch : ["64"]
         include:
@@ -22,7 +22,7 @@ jobs:
           - os: ubuntu-latest
             arch: aarch64
             python-version: "3.11"
-          - os: macos-11
+          - os: macos-latest
             arch: arm64
             python-version: "3.11"
     uses: ./.github/workflows/builder.yml
@@ -31,6 +31,6 @@ jobs:
       arch: ${{ matrix.arch }}
       python-version: ${{ matrix.python-version }}
       recipe: conda/02-pivy
-      use_mamba: true
+      use_mamba: false
     secrets:
       token: ${{ secrets.ANACONDA_TOKEN }}

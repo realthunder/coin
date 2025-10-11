@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \**************************************************************************/
 
-/* FIXME: problem reported by Jan Peèiva on coin-dicuss: if there's a
+/* FIXME: problem reported by Jan PeÃ¨iva on coin-dicuss: if there's a
    freetype.dll installed as part of Cygwin, and Coin has been built
    with MSVC (and not Cygwin GCC), trying to use the Cygwin FreeType
    DLL leads to a crash. Should detect this problem and avoid a
@@ -267,7 +267,7 @@ static FT_Library library;
    file names (in sorted order of priority), then a NULL pointer, then
    a new generic font name, etc.
 */
-static const char * fontfilenames[] = {
+static const char * const fontfilenames[] = {
   /* FIXME: different font _styles_ are just jumbled together below,
      and are not really supported. It will take some work to sort out
      that mess. 20030606 mortene. */
@@ -1025,10 +1025,10 @@ cc_flwft_get_vector_glyph(void * font, unsigned int glyphindex, float complexity
 
   /* FIXME: investigate if there is a simple way to gather the outline
      from a bitmapped font? 20040925 tamer. */
-  /* in case of a bitmap font fall back to the default font. commonly
+  /* in case of a bitmap font fall back to the default font.  Commonly
      it will already fail and return NULL due to not being able to set
-     another character size for fixed sized fonts. still, rather be
-     robust and catch the unprobable case where the provided bitmap
+     another character size for fixed sized fonts.  Still, rather be
+     robust and catch the improbable case where the provided bitmap
      font could match the flwt_3dfontsize. */
   if (tmp->format == FT_GLYPH_FORMAT_BITMAP) {
     if (cc_font_debug()) {

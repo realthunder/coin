@@ -535,7 +535,7 @@ SbTime::formatDate(const char * const fmt) const
 #endif // ! HAVE_WIN32_API
   }
 
-  if (strlen(format) == 0) return SbString("");
+  if (format[0] == '\0') return SbString("");
 
   const size_t buffersize = 256;
   char buffer[buffersize];
@@ -543,7 +543,17 @@ SbTime::formatDate(const char * const fmt) const
   time_t secs = static_cast<time_t>(this->dtime);
   size_t currentsize = buffersize;
 
+#if defined(HAVE_LOCALTIME_R)
+  struct tm tm_buf;
+  struct tm * ts = &tm_buf;
+  (void)localtime_r(&secs, ts);
+#elif defined(_WIN32) && defined(HAVE_LOCALTIME_S)
+  struct tm tm_buf;
+  struct tm * ts = &tm_buf;
+  (void)localtime_s(ts, &secs);
+#else
   struct tm * ts = localtime(&secs);
+#endif
 
   size_t ret = strftime(bufferpt, currentsize, format, ts);
   if ((ret == 0) || (ret == currentsize)) {

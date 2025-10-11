@@ -108,7 +108,7 @@
 #include <Inventor/annex/ForeignFiles/SoForeignFileKit.h>
 #endif // HAVE_NODEKITS
 
-#include "coindefs.h" // COIN_STUB()
+#include "coindefs.h" // COIN_STUB(), COIN_INIT_CHECK_THREAD()
 #include "shaders/SoShader.h"
 #include "tidbitsp.h"
 #include "fields/SoGlobalField.h"
@@ -199,6 +199,8 @@ static uint32_t a_static_variable = 0xdeadbeef;
 void
 SoDB::init(void)
 {
+  COIN_INIT_CHECK_THREAD();
+
   // This is to catch the (unlikely) event that the C++ compiler adds
   // padding or rtti information to the SbVec3f (or similar) base classes.
   // We assume this isn't done several places in Coin, so the best thing to
@@ -282,7 +284,7 @@ SoDB::init(void)
 
   // Sanity check: if this breaks, the binary format import and export
   // routines will not work correctly. FIXME: the code should be fixed
-  // to use the int16_t type, then we can remove this stoopid check.
+  // to use the int16_t type, then we can remove this stupid check.
   assert(sizeof(short) == 2);
 
   if (sizeof(short) != 2) {
@@ -895,7 +897,7 @@ SoDB::createGlobalField(const SbName & name, SoType type)
 #if COIN_DEBUG
   if (!type.canCreateInstance()) {
     SoDebugError::postWarning("SoDB::createGlobalField",
-                              "Can't create instance of field type ``%s''.",
+                              "Can't create instance of field type \"%s\".",
                               type.getName().getString());
     return NULL;
   }
@@ -1092,8 +1094,8 @@ SoDB::addConverter(SoType from, SoType to, SoType converter)
   if (!nonexist) {
 #if COIN_DEBUG
     SoDebugError::postWarning("SoDB::addConverter",
-                              "Conversion from ``%s'' to ``%s'' is already "
-                              "handled by instances of ``%s''",
+                              "Conversion from \"%s\" to \"%s\" is already "
+                              "handled by instances of \"%s\"",
                               from.getName().getString(),
                               to.getName().getString(),
                               converter.getName().getString());
@@ -1727,7 +1729,7 @@ BOOST_AUTO_TEST_CASE(readChildList)
   static const char scene[] = "#VRML V2.0 utf8\n"
                               "DEF TestGroup Group { children [Group{}, Group{}, Group{}] }";
   SoInput in;
-  in.setBuffer((void *) scene, strlen(scene));
+  in.setBuffer(scene, strlen(scene));
   SoSeparator * root = SoDB::readAll(&in);
   BOOST_REQUIRE(root);
   root->ref();
@@ -1749,7 +1751,7 @@ BOOST_AUTO_TEST_CASE(readEmptyChildList)
   static const char scene[] = "#VRML V2.0 utf8\n"
                               "DEF TestGroup Group { children }";
   SoInput in;
-  in.setBuffer((void *) scene, strlen(scene));
+  in.setBuffer(scene, strlen(scene));
   SoSeparator * root = SoDB::readAll(&in);
   if (root) {
     SoGroup * group = (SoGroup *) SoNode::getByName("TestGroup");
@@ -1771,7 +1773,7 @@ BOOST_AUTO_TEST_CASE(readNullChildList)
                               "PROTO Object [ field MFNode testChildren NULL ] { }\n"
                               "DEF TestObject Object { }";
   SoInput in;
-  in.setBuffer((void *) scene, strlen(scene));
+  in.setBuffer(scene, strlen(scene));
   SoSeparator * root = SoDB::readAll(&in);
   if (root) {
     SoNode * object = (SoNode *) SoNode::getByName("TestObject");
@@ -1793,7 +1795,7 @@ BOOST_AUTO_TEST_CASE(readInvalidChildList)
   static const char scene[] = "#VRML V2.0 utf8\n"
                               "Group { children[0] }";
   SoInput in;
-  in.setBuffer((void *) scene, strlen(scene));
+  in.setBuffer(scene, strlen(scene));
   SoSeparator * root = SoDB::readAll(&in);
   BOOST_CHECK_MESSAGE(root == NULL, "Expected the import to fail");
 
@@ -1810,7 +1812,7 @@ BOOST_AUTO_TEST_CASE(testAlternateRepNull)
   static const char scene[] = "#Inventor V2.1 ascii\n"
                               "ExtensionNode { fields [ SFNode alternateRep ] }";
   SoInput in;
-  in.setBuffer((void *) scene, strlen(scene));
+  in.setBuffer(scene, strlen(scene));
   SoSeparator * root = SoDB::readAll(&in);
   BOOST_CHECK_MESSAGE(root, "Import should succeed");
   root->ref();

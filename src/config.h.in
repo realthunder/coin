@@ -123,6 +123,9 @@
 /* define if you have CGL OpenGL bindings */
 #undef HAVE_CGL
 
+/* define if you have EGL OpenGL bindings */
+#undef HAVE_EGL
+
 /* define if you have the CoreText framework */
 #undef HAVE_CORETEXT
 
@@ -245,6 +248,12 @@
 
 /* define if you have the simage library */
 #undef HAVE_LIBSIMAGE
+
+/* define if localtime_s() is available */
+#undef HAVE_LOCALTIME_S
+
+/* define if localtime_r() is available */
+#undef HAVE_LOCALTIME_R
 
 /* Define to 1 if you have the <mach-o/dyld.h> header file. */
 #undef HAVE_MACH_O_DYLD_H
@@ -482,3 +491,6 @@
 
 /* define for runtime linking with zlib */
 #undef ZLIB_RUNTIME_LINKING
+
+/* define Coin DATADIR for resource access */
+#define COIN_DATADIR    "share/Coin"

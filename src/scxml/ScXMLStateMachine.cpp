@@ -252,7 +252,7 @@ ScXMLStateMachine::setDescription(ScXMLDocument * document)
   PRIVATE(this)->finished = FALSE;
   PRIVATE(this)->activestatelist.clear();
 
-  // set up the correct evalutor and identify the modules that are enabled
+  // set up the correct evaluator and identify the modules that are enabled
   ScXMLElt * rootelt = document->getRoot();
   if (rootelt->isOfType(ScXMLScxmlElt::getClassTypeId())) {
     ScXMLScxmlElt * scxmlelt = static_cast<ScXMLScxmlElt *>(rootelt);
@@ -375,8 +375,8 @@ ScXMLStateMachine::processOneEvent(const ScXMLEvent * event)
   if (PRIVATE(this)->activestatelist.size() == 0) {
     if (PRIVATE(this)->initializer.get() == NULL) {
       PRIVATE(this)->initializer.reset(new ScXMLTransitionElt);
-      // FIXME
       if (PRIVATE(this)->description->getRoot()->getInitial()) {
+        // FIXME: implement proper action
       } else {
         PRIVATE(this)->initializer->setTargetAttribute(PRIVATE(this)->description->getRoot()->getInitialAttribute());
       }
@@ -933,7 +933,7 @@ ScXMLStateMachine::PImpl::enterState(ScXMLElt * object)
     const ScXMLElt * container = final->getContainer();
     assert(container);
     const char * id = container->getXMLAttribute("id");
-    if (!id || strlen(id) == 0) {
+    if (!id || id[0] == '\0') {
       if (container->isOfType(ScXMLDocument::getClassTypeId())) {
         // there is not ParentID to post a ParentID.done event in
         // this case. study SCXML state to see what to do?

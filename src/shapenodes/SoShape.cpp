@@ -478,6 +478,11 @@ SoShape::getScreenSize(SoState * const state, const SbBox3f & boundingbox,
                 SoProjectionMatrixElement::get(state));
 
   SbVec2s vpsize = SoViewportRegionElement::get(state).getViewportSizePixels();
+  if (boundingbox.isEmpty())
+  {
+      rectsize = vpsize * 0.5;
+      return;
+  }
   SbVec3f bmin, bmax;
   boundingbox.getBounds(bmin, bmax);
 
@@ -1459,8 +1464,7 @@ SoShape::getBBox(SoAction * action, SbBox3f & box, SbVec3f & center)
     box = PRIVATE(this)->bboxcache->getProjectedBox();
     // we know center will be set, so just fetch it from the cache
     center = PRIVATE(this)->bboxcache->getCenter();
-  }
-  if (isvalid) {
+
     return;
   }
 
@@ -1778,7 +1782,7 @@ SoShape::validatePVCache(SoGLRenderAction * action)
     // this _must_ be called after creating the pvcache
 
     // FIXME: consider if we should call a virtual function here to
-    // enable subclasses to modify the primtive vertex cache. Must be
+    // enable subclasses to modify the primitive vertex cache. Must be
     // done before to state->pop() call.
     state->pop();
     SoCacheElement::setInvalid(storedinvalid);

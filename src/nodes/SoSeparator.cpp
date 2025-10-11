@@ -197,7 +197,7 @@ int SoSeparator::numrendercaches = 2;
   There are good reasons for setting renderCaching to \c OFF, like
   when you know the geometry will be changing a lot. Still, Coin
   should work fairly well even without this optimization.  (If
-  renderCaching is \c AUTO over a sub-graph with changing geometry or
+  renderCaching is \c AUTO over a subgraph with changing geometry or
   other cache smashing nodes, the caching heuristics will stop the
   SoSeparator node from trying to make caches -- at least after a few
   tries have been made and failed.)
@@ -215,9 +215,9 @@ int SoSeparator::numrendercaches = 2;
         avoid spending too much of the on-board graphics card's memory
         resources.</li>
 
-    <li>For shapes with between 100 and 1000 shapes, display list
-        caching will be turned on if our heuristics decides that the
-        geometry can be considered static.</li>
+    <li>For shapes with more than 100 but less than 1000 triangles,
+        display list caching will be turned on if our heuristics decides
+        that the geometry can be considered static.</li>
 
   </ul>
 
@@ -225,7 +225,7 @@ int SoSeparator::numrendercaches = 2;
   rendering (as when rendering from one X11-based system to another).
 
   Disabling the display list caching takes precedence over enabling, so
-  if you have an SoSeparator with a shape with more than 1000
+  if you have a SoSeparator containing a shape with more than 1000
   triangles and a shape with fewer than 100 triangles, caching will be
   disabled for the SoSeparator.
 

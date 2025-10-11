@@ -463,7 +463,9 @@ delete_list_elements(SbList<SoCallbackData *> & cl)
 {
   int n = cl.getLength();
   for (int i = 0; i < n; i++) {
-    if (cl[i]) cl[i]->deleteAll();
+    if (cl[i] != NULL) {
+      cl[i]->deleteAll();
+    }
   }
 }
 

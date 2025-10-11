@@ -235,7 +235,7 @@ SoFieldData::addField(SoFieldContainer * base, const char * name,
 
     // FIXME: disabled yet, as we should first make a test program to
     // see if this robustness check is ok with the current Coin
-    // code. The check shuold simply run through all
+    // code. The check should simply run through all
     // SoFieldContainer-derived classes and make an instance of all
     // non-abstract ones. Then see if there'll be any asserting or
     // crashing from the below check.
@@ -278,7 +278,7 @@ SoFieldData::overlay(SoFieldContainer * to, const SoFieldContainer * from,
 
   const SoFieldData * fd0 = to->getFieldData();
   const SoFieldData * fd1 = from->getFieldData();
-  if (!fd0 && !fd1) return;
+  if (!fd0 || !fd1) return;
 
   // The field containers should have equal SoFieldData sets.
   assert(fd0 && fd1 && *fd0==*fd1);
@@ -465,7 +465,7 @@ SoFieldData::read(SoInput * in, SoFieldContainer * object,
     if (fieldflags & ~(SoFieldData::NOTBUILTIN)) {
       SoReadError::post(in,
                         "Unknown flags in control word: 0x%02x, "
-                        "please report to coin-support@sim.no",
+                        "please report to coin-support@coin3d.org",
                         fieldflags);
     }
 
@@ -845,7 +845,7 @@ SoFieldData::readFieldDescriptions(SoInput * in, SoFieldContainer * object,
 
 #if COIN_DEBUG && 0 // debug
     SoDebugError::postInfo("SoFieldData::readFieldDescriptions",
-                           "type: ``%s'', name: ``%s''",
+                           "type: \"%s\", name: \"%s\"",
                            fieldtypename.getString(), fieldname.getString());
 #endif // debug
 

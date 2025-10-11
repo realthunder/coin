@@ -102,7 +102,7 @@ sogl_glue_instance(const SoState * state)
   if (!didwarn) {
     didwarn = 1;
     SoDebugError::postWarning("sogl_glue_instance",
-                              "Wrong action type detected. Please report this to <coin-support@sim.no>, "
+                              "Wrong action type detected. Please report this to <coin-support@coin3d.org>, "
                               "and include information about your system (compiler, Linux version, etc.");
   }
   // just return some cc_glglue instance. It usually doesn't matter
@@ -908,12 +908,9 @@ namespace { namespace SoGL { namespace IndexedLineSet {
     if (is3d) glVertex3fv((const GLfloat*) (coords3d + _idx_)); \
     else glVertex4fv((const GLfloat*) (coords4d + _idx_));
 
-    if ((AttributeBinding)MaterialBinding == PER_VERTEX_INDEXED) {
-      if (matindices == NULL) matindices = indices;
-    }
-    if ((AttributeBinding)NormalBinding == PER_VERTEX_INDEXED) {
-      if (normindices == NULL) normindices = indices;
-    }
+    // just in case someone forgot
+    if (matindices == NULL) matindices = indices;
+    if (normindices == NULL) normindices = indices;
 
     int matnr = 0;
     int texidx = 0;
@@ -923,7 +920,7 @@ namespace { namespace SoGL { namespace IndexedLineSet {
     SbVec3f dummynormal(0.0f, 0.0f, 1.0f);
     const SbVec3f *currnormal = &dummynormal;
     if (normals) currnormal = normals;
-    if ((AttributeBinding)MaterialBinding == OVERALL) {
+    if ((AttributeBinding)NormalBinding == OVERALL) {
       glNormal3fv((const GLfloat*)currnormal);
     }
 

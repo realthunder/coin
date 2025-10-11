@@ -126,9 +126,9 @@ SoTransform::SoTransform(void)
   SO_NODE_INTERNAL_CONSTRUCTOR(SoTransform);
 
   SO_NODE_ADD_FIELD(translation, (0.0f, 0.0f, 0.0f));
-  SO_NODE_ADD_FIELD(rotation, (SbRotation(SbVec3f(0.0f, 0.0f, 1.0f), 0.0f)));
+  SO_NODE_ADD_FIELD(rotation, (SbRotation::identity()));
   SO_NODE_ADD_FIELD(scaleFactor, (1.0f, 1.0f, 1.0f));
-  SO_NODE_ADD_FIELD(scaleOrientation, (SbRotation(SbVec3f(0.0f, 0.0f, 1.0f), 0.0f)));
+  SO_NODE_ADD_FIELD(scaleOrientation, (SbRotation::identity()));
   SO_NODE_ADD_FIELD(center, (0.0f, 0.0f, 0.0f));
 }
 
@@ -158,7 +158,7 @@ SoTransform::pointAt(const SbVec3f & frompoint, const SbVec3f & topoint)
 {
   this->scaleFactor = SbVec3f(1.0f, 1.0f, 1.0f);
   this->center = SbVec3f(0.0f, 0.0f, 0.0f);
-  this->scaleOrientation = SbRotation(SbVec3f(0.0f, 0.0f, 1.0f), 0.0f);
+  this->scaleOrientation = SbRotation::identity();
   
   this->translation = frompoint;  
   SbVec3f dir = topoint - frompoint;
@@ -169,7 +169,7 @@ SoTransform::pointAt(const SbVec3f & frompoint, const SbVec3f & topoint)
 #if COIN_DEBUG
   else {
     SoDebugError::postWarning("SoTransform::pointAt",
-                              "frompt == topoint");
+                              "frompoint == topoint");
 
   }
 #endif // COIN_DEBUG
@@ -324,7 +324,6 @@ SoTransform::recenter(const SbVec3f & newcenter)
   this->center = newcenter;
 }
 
-
 // Doc from superclass.
 void
 SoTransform::doAction(SoAction * action)
@@ -335,8 +334,10 @@ SoTransform::doAction(SoAction * action)
                       this->scaleFactor.getValue(),
                       this->scaleOrientation.getValue(),
                       this->center.getValue());
-  
-  SoModelMatrixElement::mult(action->getState(), this, matrix);
+
+  if (matrix != SbMatrix::identity()) {
+      SoModelMatrixElement::mult(action->getState(), this, matrix);
+  }
 }
 
 // Doc from superclass.

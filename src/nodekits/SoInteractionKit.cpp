@@ -246,7 +246,7 @@ SoInteractionKit::SoInteractionKit(void)
   PRIVATE(this)->fieldsensor = new SoFieldSensor(SoInteractionKit::fieldSensorCB, PRIVATE(this));
   PRIVATE(this)->fieldsensor->setPriority(0);
 
-  this->setUpConnections(TRUE, TRUE);
+  SoInteractionKit::setUpConnections(TRUE, TRUE);
 }
 
 /*!
@@ -494,7 +494,7 @@ SoInteractionKit::readDefaultParts(const char * fileName,
   }
 
   if (!root && defaultBuffer) {
-    input.setBuffer((void *)defaultBuffer, defBufSize);
+    input.setBuffer(defaultBuffer, defBufSize);
     root = (SoNode *)SoDB::readAll(&input);
   }
 
@@ -680,14 +680,14 @@ SoInteractionKit::setUpConnections(SbBool onoff, SbBool doitalways)
     return onoff;
 
   if (onoff) {
-    inherited::setUpConnections(onoff, FALSE);
+    (void)inherited::setUpConnections(onoff, FALSE);
     PRIVATE(this)->connectFields(TRUE);
     PRIVATE(this)->attachSensor(TRUE);
   }
   else {
     PRIVATE(this)->attachSensor(FALSE);
     PRIVATE(this)->connectFields(FALSE);
-    inherited::setUpConnections(onoff, FALSE);
+    (void)inherited::setUpConnections(onoff, FALSE);
   }
   return !(this->connectionsSetUp = onoff);
 }

@@ -256,18 +256,19 @@ public:
 
   class StaticData {
   public:
-    StaticData(void) {
-      this->pauseBetweenTracks = 2.0;
-      this->introPause = 0.0;
-      this->defaultTimerInterval = 0.1f;
-      this->defaultSampleRate = 44100;
-      this->warnAboutMissingSimage = TRUE;
+    StaticData(void)
+      : pauseBetweenTracks(2.0)
+      , introPause(0.0)
+      , defaultTimerInterval(0.1f)
+      , defaultSampleRate(44100)
+      , warnAboutMissingSimage(TRUE)
+    {
     }
     SbStringList subdirectories;
     SbTime pauseBetweenTracks;
     SbTime introPause;
-    int defaultSampleRate;
     SbTime defaultTimerInterval;
+    int defaultSampleRate;
     SbBool warnAboutMissingSimage;
   };
 
@@ -679,8 +680,8 @@ SoVRMLAudioClipP::stopPlaying()
     before the sound figures out it should also stop playing,
     read() might try to open the next file (or reopen the
     existing file if loop==TRUE) and we might get an "echo-effect".
-    We should perhaps keep an internal isActive that is "allways"
-    equal to the external isActive, allthough this should
+    We should perhaps keep an internal isActive that is "always"
+    equal to the external isActive, although this should
     be synchronized, so read() can check it safely, and
     decide to not open a file if it is FALSE.
     Investigate this further.
@@ -925,7 +926,7 @@ SoVRMLAudioClipP::loadUrl()
 
   for (int i=0; i<PUBLIC(this)->url.getNum(); i++) {
     const char * str = PUBLIC(this)->url[i].getString();
-    if ( (str == NULL) || (strlen(str)==0) )
+    if (!str || str[0] == '\0')
       continue; // ignore empty url
 
     SbString filename =
@@ -1132,7 +1133,7 @@ SoVRMLAudioClipP::openFile(const char *filename)
     // FIXME: sound should stop playing.  20021101 thammer
     SoDebugError::postWarning("SoVRMLAudioClipP::openFile",
                               "Couldn't open file '%s'.\n"
-                              "Here's some advice for debbugging:\n\n"
+                              "Here's some advice for debugging:\n\n"
                               "Audio data is loaded using the \"simage\" library. "
                               "Make sure you have\n"
                               "built the simage library with support for the audio file formats you\n"

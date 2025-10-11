@@ -15,7 +15,7 @@
 # release version number info
 m4_define([COIN_MAJOR], [4])
 m4_define([COIN_MINOR], [0])
-m4_define([COIN_MICRO], [1])
+m4_define([COIN_MICRO], [6])
 m4_define([COIN_BETA], [])
 
 # This is probably a more correct setup, but will be harder to keep if
@@ -1283,6 +1283,26 @@ AC_TRY_LINK([
   AC_MSG_RESULT([no])
 ])
 
+AC_MSG_CHECKING([for localtime_s() function])
+AC_TRY_COMPILE(
+ [#include <time.h>], [
+  time_t t;
+  struct tm buf;
+  (void) localtime_s(&buf, &t);
+ ], [AC_DEFINE(HAVE_LOCALTIME_S, 1, [define if localtime_s() is available])
+  AC_MSG_RESULT([available])],
+ [AC_MSG_RESULT([not available])])
+
+AC_MSG_CHECKING([for localtime_r() function])
+AC_TRY_COMPILE(
+ [#include <time.h>], [
+  time_t t;
+  struct tm buf;
+  (void) localtime_r(&t, &buf);
+], [AC_DEFINE(HAVE_LOCALTIME_R, 1, [define if localtime_r() is available])
+  AC_MSG_RESULT([available])],
+ [AC_MSG_RESULT([not available])])
+
 # *******************************************************************
 # Test for misc functions, typically not part of neither ISO C or POSIX.
 
@@ -1965,7 +1985,7 @@ AC_DEFINE_UNQUOTED([OPENGL_SYSTEM_LIBRARY_NAME], ["$sim_ac_opengl_dll_name"],
 # * (IBM AIX, SGI IRIX 6.2 and IRIX 6.5 with standard settings are
 # * known to fail).
 # *
-# * This nasty hack also have a lot of positivie bieffects, such as
+# * This nasty hack also have a lot of positive byeffects, such as
 # * increasing optimization, and memory usage of the compiler, while
 # * reducing the compile time for a release build.
 # *******************************************************************

@@ -636,8 +636,10 @@ ScXMLEventTarget::sendExternalEvent(const ScXMLSendElt * sendelt)
   }
 
   if (strcmp(sendtargettypeattr, "scxml") == 0) {
+    // FIXME: implement proper action
   }
   else if (strcmp(sendtargettypeattr, "x-coin-navigation") == 0) {
+    // FIXME: implement proper action
   }
   else {
     this->queueInternalEvent(SbName("error.send.TargetTypeInvalid"));
@@ -651,7 +653,7 @@ ScXMLEventTarget::sendExternalEvent(const ScXMLSendElt * sendelt)
   const char * delaystr = sendelt->getDelayAttribute();
   if (delaystr) {
     // format: "<num>s" or "<num>ms"
-    int len = strlen(delaystr);
+    size_t len = strlen(delaystr);
     if (len > 1) {
       if (delaystr[len-1] != 's') {
         SoDebugError::post("ScXMLEventTarget::sendExternalEvent",

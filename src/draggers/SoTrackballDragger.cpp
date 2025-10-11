@@ -302,7 +302,7 @@ SoTrackballDragger::SoTrackballDragger(void)
                                        static_cast<int>(strlen(TRACKBALLDRAGGER_draggergeometry)));
   }
 
-  SO_KIT_ADD_FIELD(rotation, (SbRotation(SbVec3f(0.0f, 0.0f, 1.0f), 0.0f)));
+  SO_KIT_ADD_FIELD(rotation, (SbRotation::identity()));
   SO_KIT_ADD_FIELD(scaleFactor, (1.0f, 1.0f, 1.0f));
 
   SO_KIT_INIT_INSTANCE();
@@ -580,8 +580,6 @@ SoTrackballDragger::dragStart(void)
       PRIVATE(this)->sphereProj->setWorkingSpace(wk2ws);
       switch (this->getFrontOnProjector()) {
       case FRONT:
-        PRIVATE(this)->sphereProj->setFront(TRUE);
-        break;
       case BACK:
         PRIVATE(this)->sphereProj->setFront(TRUE);
         break;

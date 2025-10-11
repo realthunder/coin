@@ -124,10 +124,10 @@
   a second, depending on how fast each frame is drawn.
 
   The \c stdout keyword causes the profiling data to be sent to stdout
-  instead of being overlayed on the GL view.
+  instead of being overlaid on the GL view.
 
   The \c stderr keyword causes the profiling data to be sent to stderr
-  instead of being overlayed on the GL view.
+  instead of being overlaid on the GL view.
 
   The \c clear keyword works with \c stdout and \c stderr, and makes
   Coin attempt to clear the console between each time it dumps
@@ -268,6 +268,7 @@
   \li \ref COIN_CGLGLUE_NO_PBUFFERS
   \li \ref COIN_GLXGLUE_NO_PBUFFERS
   \li \ref COIN_GLXGLUE_NO_GLX13_PBUFFERS
+  \li \ref COIN_GLX_PIXMAP_DIRECT_RENDERING
   \li \ref COIN_WGLGLUE_NO_PBUFFERS
 
   \li \ref COIN_ALLOW_SPIDERMONKEY
@@ -439,6 +440,7 @@ EnvironmentVariable COIN_GLU_LIBNAME;
 EnvironmentVariable COIN_GLU_SILENCE_TESS_COMBINE_WARNING;
 EnvironmentVariable COIN_GLXGLUE_NO_GLX13_PBUFFERS;
 EnvironmentVariable COIN_GLXGLUE_NO_PBUFFERS;
+EnvironmentVariable COIN_GLX_PIXMAP_DIRECT_RENDERING;
 EnvironmentVariable COIN_GL_DISABLE_VBO;
 EnvironmentVariable COIN_GL_NO_CURRENT_CONTEXT_CHECK;
 EnvironmentVariable COIN_HANDLE_STACK_OVERFLOW;
@@ -769,6 +771,17 @@ EnvironmentVariable WINDIR;
 
   \ingroup coin_envvars
 */
+
+/*!
+  \var EnvironmentVariable COIN_GLX_PIXMAP_DIRECT_RENDERING
+
+  If this environment variable is used to control direct rendering in GLX for
+  offscreen contexts. If the value is set to a value &gt; 0, direct rendering is
+  forced.
+
+  \ingroup coin_envvars
+*/
+
 
 /*!
   \var EnvironmentVariable COIN_WGLGLUE_NO_PBUFFERS

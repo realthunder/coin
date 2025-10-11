@@ -143,7 +143,7 @@ inline unsigned int SbHashFunc(const void * key)
 {
   return SbHashFunc(reinterpret_cast<size_t>(key));
 }
-#include "coindefs.h" // COIN_STUB()
+#include "coindefs.h" // COIN_STUB(), COIN_CHECK_THREAD()
 
 #ifdef COIN_THREADSAFE
 #include "threads/recmutexp.h"
@@ -1403,7 +1403,7 @@ SoField::get(SbString & valuestring)
   valuestring = static_cast<char *>(buffer) + offset;
 
   // dealloc tmp memory buffer
-  if (bufferptr) { free(bufferptr); }
+  free(bufferptr);
 
   CC_MUTEX_LOCK(sofield_mutex);
   size_t isok = SoFieldP::getReallocHash()->erase(bufferptr ? bufferptr : initbuffer);
@@ -2223,6 +2223,7 @@ SoField::getDirty(void) const
 void
 SoField::setDirty(SbBool dirty)
 {
+  COIN_CHECK_THREAD();
   (void) this->changeStatusBits(FLAG_NEEDEVALUATION, dirty);
 }
 
@@ -2370,7 +2371,7 @@ SoField::readConnection(SoInput * in)
   }
 
   if (!masterfield && !masteroutput) {
-    SoReadError::post(in, "no field or output ``%s'' in ``%s''",
+    SoReadError::post(in, "no field or output \"%s\" in \"%s\"",
                       mastername.getString(),
                       fc->getTypeId().getName().getString());
     return FALSE;
@@ -2385,7 +2386,7 @@ SoField::readConnection(SoInput * in)
   else if (masteroutput) { ok = this->connectFrom(masteroutput, TRUE); }
 
   if (!ok) {
-    SoReadError::post(in, "couldn't connect ``%s'' field to ``%s'', "
+    SoReadError::post(in, "couldn't connect \"%s\" field to \"%s\", "
                       "connection will be ignored",
                       this->getTypeId().getName().getString(),
                       mastername.getString());

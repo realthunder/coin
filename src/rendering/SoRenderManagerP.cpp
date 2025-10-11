@@ -33,9 +33,12 @@
 #include "SoRenderManagerP.h"
 #include "coindefs.h"
 
+#include <limits>
+
 #include <Inventor/nodes/SoInfo.h>
 #include <Inventor/nodes/SoCamera.h>
 #include <Inventor/nodes/SoPerspectiveCamera.h>
+#include "Inventor/nodes/SoOrthographicCamera.h"
 #include <Inventor/actions/SoGLRenderAction.h>
 #include <Inventor/actions/SoGetBoundingBoxAction.h>
 #include <Inventor/actions/SoGetMatrixAction.h>
@@ -93,12 +96,12 @@ SoRenderManagerP::cleanup(void)
 }
 
 void
-SoRenderManagerP::updateClippingPlanesCB(void * closure, SoSensor * COIN_UNUSED_ARG(sensor))
+SoRenderManagerP::updateClippingPlanesCB(void * COIN_UNUSED_ARG(closure), SoSensor * COIN_UNUSED_ARG(sensor))
 {
-  SoRenderManagerP * thisp = (SoRenderManagerP *) closure;
-  if (thisp->autoclipping != SoRenderManager::NO_AUTO_CLIPPING) {
-    thisp->setClippingPlanes();
-  }
+  //SoRenderManagerP * thisp = (SoRenderManagerP *) closure;
+  //if (thisp->autoclipping != SoRenderManager::NO_AUTO_CLIPPING) {
+  //  thisp->setClippingPlanes();
+  //}
 }
 
 void
@@ -130,10 +133,21 @@ SoRenderManagerP::setClippingPlanes(void)
   xbox.transform(mat);
   SbBox3f box = xbox.project();
 
-  float nearval = -box.getMax()[2];
-  float farval = -box.getMin()[2];
+  float sizeX, sizeY, sizeZ;
+  box.getSize(sizeX, sizeY, sizeZ);
+  float boxDiagonal = sqrtf(sizeX * sizeX + sizeY * sizeY + sizeZ * sizeZ);
 
-  if (farval <= 0.0f) return;
+  // Clipping offset is 1% of the bounding box diagonal or at most 1.0 and at least std::numeric_limits<float>::epsilon()
+  float clippingOffset = SbMin(1.0f, SbMax(std::numeric_limits<float>::epsilon(), 0.01f * boxDiagonal));
+  float nearval = -box.getMax()[2] - clippingOffset;
+  float farval = -box.getMin()[2] + clippingOffset;
+
+  if (!camera->isOfType(SoOrthographicCamera::getClassTypeId()) && farval <= 0.0f) return;
+
+  if (box.isEmpty()) {
+    nearval = 1;
+    farval = 10;
+  }
 
   if (camera->isOfType(SoPerspectiveCamera::getClassTypeId())) {
     float nearlimit;
@@ -157,8 +171,8 @@ SoRenderManagerP::setClippingPlanes(void)
   }
 
   const float SLACK = 0.001f;
-  const float newnear = nearval * (1.0f - SLACK);
-  const float newfar = farval * (1.0f + SLACK);
+  const float newnear = nearval >= 0 ? nearval * (1.0f - SLACK) : nearval * (1.0f + SLACK);
+  const float newfar = farval >= 0 ? farval * (1.0f + SLACK) : farval * (1.0f - SLACK);
 
   const float neareps = nearval * SLACK * SLACK;
   const float fareps = farval * SLACK * SLACK;

@@ -793,7 +793,7 @@ CHUNK(LoadNamedObject)
 
   if (con->cObj) {
     // set object name
-    if (con->loadObjNames && strlen(con->objectName) > 0)
+    if (con->loadObjNames && con->objectName[0] != '\0')
       con->cObj->setName(con->objectName);
 
     // add cObj to the main scene graph
@@ -1353,7 +1353,7 @@ CHUNK(LoadShininess)
   FULLHEADER;
 
   if (coin_debug_3ds() >= 4)
-    SoDebugError::postInfo("LoadMatShininesst",
+    SoDebugError::postInfo("LoadMatShininess",
                            "Begin");
 
   con->cColorFloat = 0.f;
@@ -1467,7 +1467,7 @@ CHUNK(LoadMapUScale)
   HEADER;
 
   if (coin_debug_3ds() >= 4)
-    SoDebugError::postInfo("LoadMatUScale",
+    SoDebugError::postInfo("LoadMapUScale",
                            "Begin");
 
   con->s >> con->cMat->uscale;
@@ -1554,7 +1554,7 @@ CHUNK(LoadIntPercentage)
   HEADER;
 
   if (coin_debug_3ds() >= 4)
-    SoDebugError::postInfo("LoadIntPerscentage",
+    SoDebugError::postInfo("LoadIntPercentage",
                            "Begin");
 
   int16_t i;
@@ -1570,7 +1570,7 @@ CHUNK(LoadFloatPercentage)
   HEADER;
 
   if (coin_debug_3ds() >= 4)
-    SoDebugError::postInfo("LoadFloatPersentage",
+    SoDebugError::postInfo("LoadFloatPercentage",
                            "Begin");
 
   con->s >> (con->cColorFloat);

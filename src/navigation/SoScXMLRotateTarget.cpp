@@ -341,11 +341,11 @@ SoScXMLRotateTarget::processOneEvent(const ScXMLEvent * event)
         double fromtime = SbTime::getTimeOfDay().getValue();
         updatetimestr = SbStringConvert::toString(fromtime);
 
-        ScXMLEvent event;
-        event.setEventName(TRIGGER_SPIN());
-        event.setAssociation("rotation", rotationstr.getString());
-        event.setAssociation("from", updatetimestr.getString());
-        statemachine->queueEvent(&event);
+        ScXMLEvent triggerspinevent;
+        triggerspinevent.setEventName(TRIGGER_SPIN());
+        triggerspinevent.setAssociation("rotation", rotationstr.getString());
+        triggerspinevent.setAssociation("from", updatetimestr.getString());
+        statemachine->queueEvent(&triggerspinevent);
       }
     }
 
@@ -391,11 +391,8 @@ SoScXMLRotateTarget::processOneEvent(const ScXMLEvent * event)
       useupvector = TRUE;
     }
 
-    if (!useupvector) {
-      SoScXMLRotateTarget::setFocalPoint(camera, worldspace);
-    } else {
-      SoScXMLRotateTarget::setFocalPoint(camera, worldspace, upvector);
-    }
+    SoScXMLRotateTarget::setFocalPoint(camera, worldspace, upvector);
+
     if (usefocaldistance) {
       SoScXMLDollyTarget::jump(camera, float(focaldistance));
     }

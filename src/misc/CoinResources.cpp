@@ -87,7 +87,7 @@
 #include "coindefs.h"
 
 #if BOOST_WORKAROUND(COIN_MSVC, <= COIN_MSVC_6_0_VERSION)
-// sumbol length truncation
+// symbol length truncation
 #pragma warning(disable:4786)
 #endif // VC6.0
 
@@ -127,7 +127,7 @@ namespace CoinResources { namespace {
       ResourceMap::iterator it = resourcemap->begin();
       while (it != resourcemap->end()) {
         delete it->second;
-        it++;
+        ++it;
       }
       delete resourcemap;
       resourcemap = NULL;
@@ -222,7 +222,7 @@ CoinResources::get(const char * resloc)
         handle->filenotfound = TRUE;
         break;
       }
-      filename.sprintf("%s/share/Coin/%s", coindirenv, resloc + 5);
+      filename.sprintf("%s/%s/%s", coindirenv, COIN_DATADIR, resloc + 5);
 #endif // !COIN_MACOSX_FRAMEWORK
       if (COIN_DEBUG && 0) {
         SoDebugError::postInfo("CoinResources::get", "trying to load '%s'.",

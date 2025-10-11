@@ -674,7 +674,7 @@ cc_flw_get_glyph(int font, unsigned int character)
            a superset of the chars in the default font. (The default
            font characters being rendered was due to a bug in the
            character mapping, causing failure to find special chars such
-           as 'ØÆÅ'. The bug has since been fixed).  20030327 preng */
+           as 'Ã˜Ã†Ã…'. The bug has since been fixed).  20030327 preng */
 
         if (cc_font_debug()) {
           cc_debugerror_postwarning("cc_flw_get_glyph",
@@ -883,7 +883,7 @@ cc_flw_get_bitmap(int font, unsigned int glyph)
       bm = get_default_bitmap(gs->nativeglyphidx & 0xff, (float)fs->sizey);
       gs->fromdefaultfont = TRUE;
     }
-    else if (bm && bm->buffer) {
+    else if (bm->buffer) {
       buf = (unsigned char *)malloc(size_t(bm->pitch) * size_t(bm->rows));
       /* Copy & reverse buffer to OpenGL "up" direction. */
       for (i = 0; i < bm->rows; i++) {

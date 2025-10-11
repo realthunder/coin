@@ -44,7 +44,7 @@
   If you are looking for information about using Coin in proprietary
   applications for commercial distribution, read about the Coin
   Professional Edition License on the Coin web-pages <a
-  href="http://coin3d.github.io">here</a>.
+  href="https://coin3d.github.io">here</a>.
 */
 
 
@@ -59,7 +59,7 @@
 class SoLockManager_pimpl {
 public:
   SoLockManager_pimpl(void) { this->unlockstr = NULL; }
-  ~SoLockManager_pimpl() { delete this->unlockstr; }
+  ~SoLockManager_pimpl() { delete[] this->unlockstr; }
 
   char * unlockstr;
 };
@@ -86,7 +86,7 @@ SoLockManager::SetUnlockString(char * unlockstr)
     solockmanager_pimpl = new SoLockManager_pimpl;
     coin_atexit((coin_atexit_f*)solockmanager_cleanup, CC_ATEXIT_NORMAL);
   }
-  delete solockmanager_pimpl->unlockstr;
+  delete[] solockmanager_pimpl->unlockstr;
   solockmanager_pimpl->unlockstr = new char[strlen(unlockstr) + 1];
   (void)strcpy(solockmanager_pimpl->unlockstr, unlockstr);
 }

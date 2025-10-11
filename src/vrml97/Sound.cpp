@@ -137,7 +137,7 @@
 
   Between the two ellipsoids, there shall be a linear attenuation ramp
   in loudness, from 0 dB at the minimum ellipsoid to -20 dB at the
-  maximum ellipsoid: attenuation = -20 × (d' / d") where d' is the
+  maximum ellipsoid: attenuation = -20 Ã— (d' / d") where d' is the
   distance along the location-to-viewer vector, measured from the
   transformed minimum ellipsoid boundary to the viewer, and d" is the
   distance along the location-to-viewer vector from the transformed
@@ -1197,7 +1197,7 @@ SbBool SoVRMLSoundP::stopPlaying()
 
   /* Note: Rewinding will make sure state is AL_INITIAL, not just
      AL_STOPPED.  This lets us give the user a warning if the source
-     stopped playing because a buffer underrun occured. See
+     stopped playing because a buffer underrun occurred. See
      fillBuffers().  2002-11-07 thammer.  */
 
   openal_wrapper()->alSourceRewind(this->sourceId);
@@ -1500,7 +1500,7 @@ void SoVRMLSoundP::fillBuffers()
          changing ac:isActive.
 
          This also fixes the first deadlock described above, so I'll probably
-         get away with not unlocking syncmutex here afterall.
+         get away with not unlocking syncmutex here after all.
 
          2002-11-18 thammer */
       ret = this->currentAudioClip->read(this->cliphandle,

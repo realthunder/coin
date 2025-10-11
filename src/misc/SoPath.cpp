@@ -265,7 +265,7 @@ SoPath::append(SoNode * const node)
   }
 #endif // COIN_DEBUG
 
-  const int idx = children->find((void *)node);
+  const int idx = children->find(node);
 #if COIN_DEBUG
   if (idx < 0) {
     SoDebugError::post("SoPath::append",
@@ -1093,7 +1093,7 @@ SoPath::getTypeId(void) const
 void *
 SoPath::createInstance(void)
 {
-  return (void *)new SoPath;
+  return new SoPath;
 }
 
 /*!

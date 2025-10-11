@@ -186,7 +186,7 @@
 #include <Inventor/misc/SoGLImage.h>
 
 #include <cassert>
-#include <list>
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -227,7 +227,7 @@
 #include "coindefs.h"
 
 #if BOOST_WORKAROUND(COIN_MSVC, <= COIN_MSVC_6_0_VERSION)
-// truncating symbol length
+// symbol length truncation
 #pragma warning(disable:4786)
 #endif // VC6.0
 
@@ -255,8 +255,8 @@ static SbStorage * glimage_bufferstorage = NULL;
 
 typedef struct {
   unsigned char * buffer;
-  int buffersize;
   unsigned char * mipmapbuffer;
+  int buffersize;
   int mipmapbuffersize;
 } soglimage_buffer;
 
@@ -480,13 +480,12 @@ fast_mipmap(SoState * state, int width, int height, int nc,
       if (SoGLDriverDatabase::isSupported(glw, SO_GL_TEXSUBIMAGE)) {
         cc_glglue_glTexSubImage2D(glw, GL_TEXTURE_2D, level, 0, 0,
                                   width, height, format,
-                                  GL_UNSIGNED_BYTE, (void*) src);
+                                  GL_UNSIGNED_BYTE, src);
       }
     }
     else {
       glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width,
-                   height, 0, format, GL_UNSIGNED_BYTE,
-                   (void *) src);
+                   height, 0, format, GL_UNSIGNED_BYTE, src);
     }
   }
 }
@@ -531,14 +530,14 @@ fast_mipmap(SoState * state, int width, int height, int depth,
       if (SoGLDriverDatabase::isSupported(glw, SO_GL_3D_TEXTURES)) {
         cc_glglue_glTexSubImage3D(glw, GL_TEXTURE_3D, level, 0, 0, 0,
                                   width, height, depth, format,
-                                  GL_UNSIGNED_BYTE, (void*) src);
+                                  GL_UNSIGNED_BYTE, src);
       }
     }
     else {
       if (SoGLDriverDatabase::isSupported(glw, SO_GL_3D_TEXTURES)) {
         cc_glglue_glTexImage3D(glw, GL_TEXTURE_3D, level, internalFormat,
                                width, height, depth, 0, format,
-                               GL_UNSIGNED_BYTE, (void *) src);
+                               GL_UNSIGNED_BYTE, src);
       }
     }
   }
@@ -1565,9 +1564,9 @@ SoGLImageP::resizeImage(SoState * state, unsigned char *& imageptr,
           // FIXME: ignoring the error code. Silly. 20000929 mortene.
           (void)GLUWrapper()->gluScaleImage(coin_glglue_get_texture_format(glw, numcomponents),
                                             xsize, ysize,
-                                            GL_UNSIGNED_BYTE, (void*) bytes,
+                                            GL_UNSIGNED_BYTE, bytes,
                                             newx, newy, GL_UNSIGNED_BYTE,
-                                            (void*)glimage_tmpimagebuffer);
+                                            glimage_tmpimagebuffer);
           glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
           glPixelStorei(GL_PACK_ALIGNMENT, 4);
         }
@@ -2117,9 +2116,10 @@ void
 SoGLImage::endFrame(SoState *state)
 {
   if (glimage_reglist) {
-    std::list<std::pair<void (*)(void *), void *> > cb_list;
+    std::vector<std::pair<void (*)(void *), void *> > cb_list;
     LOCK_GLIMAGE;
     int n = glimage_reglist->getLength();
+    cb_list.reserve(n);
     for (int i = 0; i < n; i++) {
       SoGLImage *img = (*glimage_reglist)[i];
       img->unrefOldDL(state, glimage_maxage);
@@ -2131,7 +2131,7 @@ SoGLImage::endFrame(SoState *state)
 
     // the actual invocation of the callbacks should be performed outside
     // the locked region to avoid deadlocks
-    for (std::list<std::pair<void (*)(void *), void *> >::iterator it = cb_list.begin(),
+    for (std::vector<std::pair<void (*)(void *), void *> >::iterator it = cb_list.begin(),
            end = cb_list.end(); it != end; ++it)
       it->first(it->second);
   }

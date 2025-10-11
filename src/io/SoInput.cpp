@@ -474,7 +474,7 @@ SoInput::setFilePointer(FILE * newFP)
   }
   SoInput_FileInfo * newfile =
     new SoInput_FileInfo(reader, PRIVATE(this)->copied_references);
-  if (newfile) this->filestack.insert(newfile, 0);
+  this->filestack.insert(newfile, 0);
 }
 
 /*!
@@ -509,7 +509,7 @@ SoInput::openFile(const char * fileName, SbBool okIfNotFound)
     return TRUE;
   }
 
-  if (!okIfNotFound) { SoReadError::post(this, fullname.getString()); }
+  if (!okIfNotFound) { SoReadError::post(this, "%s", fullname.getString()); }
 
   return FALSE;
 }
@@ -559,7 +559,7 @@ SoInput::pushFile(const char * filename)
     return TRUE;
   }
 
-  SoReadError::post(this, fullname.getString());
+  SoReadError::post(this, "%s", fullname.getString());
 
   return FALSE;
 }
@@ -1202,7 +1202,7 @@ SoInput::read(SbName & n, SbBool validIdent)
 
 #if 0 // debug
     SoDebugError::postInfo("SoInput::read",
-                           "string read: ``%s''", s.getString());
+                           "string read: \"%s\"", s.getString());
 #endif // debug
 
     if (s.getLength() == 0) return FALSE;
@@ -1672,7 +1672,7 @@ void
 SoInput::addDirectoryIdx(const int idx, const char * dirName)
 {
   assert(idx > -2);
-  if (strlen(dirName) == 0) return; // Don't add empty dirs
+  if (!dirName || dirName[0] == '\0') return; // Don't add empty dirs
   SbStringList * dirs = SoInput::dirsearchlist;
 
   if (soinput_tls) {

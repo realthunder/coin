@@ -42,9 +42,9 @@
   Due to the basic differences between VRML1/Coin and VRML2 (the
   latter does not really have a traversal state) the new scene graph
   will typically be somewhat larger. To minimize this effect the
-  action tries to re-use nodes when possible.
+  action tries to reuse nodes when possible.
 
-  VRML1 nodes will be converted to its direct equivalent VRML2 node,
+  VRML1 nodes will be converted to their equivalent VRML2 nodes,
   while Coin nodes with no VRML2 equivalent are converted to
   IndexedFaceSet. If the DrawStyle is POINTS, all geometry will be
   built using PointSet; if it is LINES IndexedLineSet is used.
@@ -312,6 +312,13 @@ public:
 
   ~SoToVRML2ActionP(void)
   {
+    delete this->bboxaction;
+    if (this->vrml2path) {
+        this->vrml2path->unref();
+    }
+    if (this->vrml2root) {
+        this->vrml2root->unref();
+    }
     delete this->vrmlcoords;
     delete this->vrmlnormals;
     delete this->vrmlcolors;
@@ -621,13 +628,6 @@ SoToVRML2Action::SoToVRML2Action(void)
 
 SoToVRML2Action::~SoToVRML2Action(void)
 {
-  delete PRIVATE(this)->bboxaction;
-  if (PRIVATE(this)->vrml2path) {
-    PRIVATE(this)->vrml2path->unref();
-  }
-  if (PRIVATE(this)->vrml2root) {
-    PRIVATE(this)->vrml2root->unref();
-  }
 }
 
 // Documented in superclass.
@@ -1156,7 +1156,7 @@ SoToVRML2ActionP::push_levelofdetail_cb(void * closure, SoCallbackAction * actio
 
   // create a typical view volume
   SbViewVolume vv;
-  vv.perspective(float(M_PI)/4.0f, DEFAULT_VIEWPORT_WIDTH/DEFAULT_VIEWPORT_HEIGHT,
+  vv.perspective(float(M_PI)/4.0f, float(DEFAULT_VIEWPORT_WIDTH)/float(DEFAULT_VIEWPORT_HEIGHT),
                  1.0f, 10.0f);
 
 

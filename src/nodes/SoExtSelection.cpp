@@ -231,7 +231,7 @@
     drivers. 2002-08-02 handegar.
 
     UPDATE 2004-10-27 mortene: I found a grave overflow error in the
-    calculation of maximumcolorcounter from the values returned fom
+    calculation of maximumcolorcounter from the values returned from
     glGetInteger() -- could the problem mentioned above actually be
     due to this? The explanation given above doesn't seem very
     likely...
@@ -1814,7 +1814,7 @@ SoExtSelectionP::triangleCB(void * userData,
 
       thisp->addTriangleToOffscreenBuffer(action, v1, v2, v3, thisp->offscreencolorcounteroverflow);
 
-    } else if (thisp->triangleFilterCB && thisp->primcbdata.allshapes) {
+    } else if (thisp->triangleFilterCB) {
 
       // Present accepted triangle to 'user' through a callback.
       if(thisp->triangleFilterCB(thisp->triangleFilterCBData,
@@ -2015,7 +2015,7 @@ SoExtSelectionP::lineSegmentCB(void *userData,
 
       thisp->addLineToOffscreenBuffer(action, v1, v2, thisp->offscreencolorcounteroverflow);
 
-    } else if (thisp->lineFilterCB && thisp->primcbdata.allshapes) {
+    } else if (thisp->lineFilterCB) {
 
       if (thisp->lineFilterCB(thisp->lineFilterCBData,
                               action, v1, v2)) {
@@ -2167,7 +2167,7 @@ SoExtSelectionP::pointCB(void *userData,
 
       thisp->addPointToOffscreenBuffer(action, v, thisp->offscreencolorcounteroverflow);
 
-    } else if (thisp->pointFilterCB && thisp->primcbdata.allshapes) {
+    } else if (thisp->pointFilterCB) {
 
       if (thisp->pointFilterCB(thisp->pointFilterCBData, action, v)) {
         // select shape
@@ -2343,9 +2343,9 @@ SoExtSelectionP::offscreenRenderLassoCallback(void * userdata, SoAction * action
   // This flag will be set to TRUE if the tesselatorcallbacks was executed.
   pimpl->lassostencilisdrawed = FALSE;
 
-  // Render all tris to offscreen buffer via a tesselator.
-  SbTesselator tesselator(pimpl->offscreenLassoTesselatorCallback,pimpl);
-  tesselator.beginPolygon();
+  // Render all tris to offscreen buffer via a tessellator.
+  SbTesselator tessellator(pimpl->offscreenLassoTesselatorCallback,pimpl);
+  tessellator.beginPolygon();
 
   int i;
   SbList <SbVec3f> tmplist;
@@ -2354,8 +2354,8 @@ SoExtSelectionP::offscreenRenderLassoCallback(void * userdata, SoAction * action
   }
   const SbVec3f * tmparray = tmplist.getArrayPtr();
   for(i = 0; i < pimpl->runningselection.coords.getLength(); i++)
-    tesselator.addVertex(tmparray[i],(void*)&tmparray[i]);
-  tesselator.endPolygon();
+    tessellator.addVertex(tmparray[i],(void*)&tmparray[i]);
+  tessellator.endPolygon();
 
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();

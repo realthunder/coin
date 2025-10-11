@@ -324,7 +324,7 @@ ScXMLTransitionElt::setEventAttribute(const char * eventstr)
     if ((ptr != NULL) && (strlen(ptr) == 2)) {
       this->needprefixmatching = TRUE;
       // we'll chop off the pattern matching key and use the boolean
-      const int len = strlen(eventstr) - 1;
+      const size_t len = strlen(eventstr) - 1;
       this->event = new char [ len ];
       strncpy(this->event, eventstr, len - 1);
       this->event[ len - 1 ] = '\0';
@@ -440,8 +440,7 @@ ScXMLTransitionElt::search(const char * attrname, const char * attrvalue) const
 SbBool
 ScXMLTransitionElt::isConditionLess(void) const
 {
-  if (this->cond == NULL) return TRUE;
-  if (strlen(this->cond) == 0) return TRUE;
+  if (!this->cond || this->cond[0] == '\0') return TRUE;
   return FALSE;
 }
 
@@ -500,8 +499,8 @@ ScXMLTransitionElt::isEventMatch(const ScXMLEvent * eventobj) const
 
   if (this->eventkey == eventid) return TRUE;
 
-  const int keylen = strlen(this->eventkey.getString());
-  if (keylen < static_cast<int>(strlen(eventid.getString()))) {
+  const size_t keylen = strlen(this->eventkey.getString());
+  if (keylen < strlen(eventid.getString())) {
     if ((eventid.getString()[keylen] == '.') &&
         strncmp(this->eventkey.getString(), eventid.getString(), keylen) == 0) {
       return TRUE; // this->event matches up to eventobj token separator

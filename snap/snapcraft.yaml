@@ -37,7 +37,7 @@ parts:
       - -DCMAKE_INSTALL_PREFIX=/usr
       - -DCMAKE_BUILD_TYPE=Release
       - -DCOIN_BUILD_TESTS=OFF
-      - -DCMAKE_CXX_STANDARD=98
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     build-packages:
       - g++
       - libboost-dev
@@ -55,7 +55,7 @@ parts:
     after: [coin3d]
     plugin: cmake
     source: https://github.com/coin3d/pivy.git
-    source-tag: "0.6.8"
+    source-tag: "0.6.10"
     build-packages:
       - g++
       - swig

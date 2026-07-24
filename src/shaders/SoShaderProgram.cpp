@@ -201,6 +201,18 @@
 
 */
 
+/*!
+  \var SoSFName SoShaderProgram::stage
+
+  Names the renderer pipeline stage this program attaches to.  The
+  default is "material" (replace surface shading).  Stage names are
+  interpreted by external render backends (e.g. the bgfx renderer,
+  which also understands "post" for a full-screen pass over the
+  composited color); Coin's own GL rendering ignores this field.
+
+  \since Coin 4.0 (realthunder fork)
+*/
+
 #include <Inventor/nodes/SoShaderProgram.h>
 #include "coindefs.h"
 
@@ -269,6 +281,8 @@ SoShaderProgram::SoShaderProgram(void)
   SO_NODE_ADD_FIELD(shaderObject, (NULL));
   this->shaderObject.setNum(0);
   this->shaderObject.setDefault(TRUE);
+
+  SO_NODE_ADD_FIELD(stage, ("material"));
 
 
   PRIVATE(this) = new SoShaderProgramP(this);

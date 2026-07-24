@@ -36,6 +36,7 @@
 #include <Inventor/nodes/SoNode.h>
 #include <Inventor/nodes/SoSubNode.h>
 #include <Inventor/fields/SoMFNode.h>
+#include <Inventor/fields/SoSFName.h>
 
 class SoState;
 class SoGLRenderAction;
@@ -53,6 +54,7 @@ class COIN_DLL_API SoShaderProgram : public SoNode {
 
 public:
   SoMFNode shaderObject;
+  SoSFName stage;
 
   SoShaderProgram(void);
 

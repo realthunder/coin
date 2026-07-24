@@ -56,7 +56,10 @@ public:
     ARB_PROGRAM,
     CG_PROGRAM,
     GLSL_PROGRAM,
-    FILENAME
+    FILENAME,
+    // bgfx shaderc dialect (realthunder fork). Consumed by external
+    // render backends; Coin's own GL rendering skips such shaders.
+    BGFX_SC
   };
 
   SoSFBool isActive;

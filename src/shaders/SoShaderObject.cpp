@@ -95,6 +95,14 @@
   Shader should be loaded from the file in sourceProgram.
 */
 
+/*!
+  \var SoShaderObject::SourceType SoShaderObject::BGFX_SC
+
+  Specifies a bgfx shaderc (.sc) program (realthunder fork extension).
+  Such shaders are consumed by external render backends; Coin's own GL
+  rendering skips them.
+*/
+
 
 /*!
   \var SoMFNode SoShaderObject::parameter
@@ -255,6 +263,7 @@ SoShaderObject::SoShaderObject(void)
   SO_NODE_DEFINE_ENUM_VALUE(SourceType, CG_PROGRAM);
   SO_NODE_DEFINE_ENUM_VALUE(SourceType, GLSL_PROGRAM);
   SO_NODE_DEFINE_ENUM_VALUE(SourceType, FILENAME);
+  SO_NODE_DEFINE_ENUM_VALUE(SourceType, BGFX_SC);
 
   SO_NODE_ADD_FIELD(sourceType, (FILENAME));
   SO_NODE_SET_SF_ENUM_TYPE(sourceType, SourceType);
@@ -420,6 +429,10 @@ SoShaderObjectP::GLRender(SoGLRenderAction * action)
     // if file could not be read
     if (this->cachedSourceType == SoShaderObject::FILENAME) return;
 
+    // bgfx shaderc source is for external render backends only --
+    // silently skip it in Coin's own GL pipeline.
+    if (this->cachedSourceType == SoShaderObject::BGFX_SC) return;
+
     if (!this->isSupported(this->cachedSourceType, glue)) {
       SbString s;
       switch (this->cachedSourceType) {
@@ -495,6 +508,10 @@ SoShaderObjectP::checkType(void)
   }
   if (len > 3) {
     SbString subStr = fileName.getSubString(len-3);
+    if (subStr == ".sc") {
+      this->cachedSourceType = SoShaderObject::BGFX_SC;
+      return;
+    }
     if (subStr == ".cg") {
       this->cachedSourceType = SoShaderObject::CG_PROGRAM;
       return;

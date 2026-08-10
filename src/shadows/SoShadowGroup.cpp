@@ -411,12 +411,19 @@ struct GaussianFilter {
     createFilter(false);
   }
 
-  static inline int binomial(int n, int k)
+  // Returns double, not int. The Gaussian below asks for the central
+  // binomial coefficient of n = 2*size + 4, which outgrows int at size 15
+  // (C(34,17) = 2333606220 > INT_MAX) and reaches 2.4e24 at the size 40 a
+  // smoothBorder of 4 asks for. Truncating that handed back INT_MIN, so
+  // every weight came out as +-0, the filter folded down to a constant
+  // black, and the driver then dropped 'baseimage' as an inactive uniform
+  // -- which is all the warning about it ever was.
+  static inline double binomial(int n, int k)
   {
     double res = 1;
     for (int i = 1; i <= k; ++i)
       res = res * (n - k + i) / i;
-    return (int)(res + 0.01);
+    return res;
   }
 
   static void initGaussian(SbList<float> &weights, int size)

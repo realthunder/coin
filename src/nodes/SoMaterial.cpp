@@ -176,6 +176,8 @@
 #include <Inventor/annex/Profiler/elements/SoProfilerElement.h>
 #include <Inventor/annex/Profiler/SbProfilingData.h>
 
+#include "elements/SoLazyElementEx.h"
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif // HAVE_CONFIG_H
@@ -537,6 +539,20 @@ SoMaterial::doAction(SoAction * action)
                                 bitmask & SoLazyElement::SHININESS_MASK ?
                                 SbClamp(this->shininess[0], 0.0f, 1.0f) : dummyval,
                                 istransparent);
+    // the array form of the four fields setMaterials() collapses to
+    // single values; a no-op unless the extended element is installed
+    // and active in this state (SoCallbackAction only)
+    if (SoLazyElementEx::isInstalled()) {
+      SoLazyElementEx::setMaterialsEx(state, this, bitmask,
+                                      this->ambientColor.getValues(0),
+                                      this->ambientColor.getNum(),
+                                      this->emissiveColor.getValues(0),
+                                      this->emissiveColor.getNum(),
+                                      this->specularColor.getValues(0),
+                                      this->specularColor.getNum(),
+                                      this->shininess.getValues(0),
+                                      this->shininess.getNum());
+    }
     if (state->isElementEnabled(SoGLVBOElement::getClassStackIndex())) {
       SoBase::staticDataLock();
       SbBool setvbo = FALSE;

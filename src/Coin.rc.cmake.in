@@ -20,12 +20,12 @@ BEGIN
             VALUE "CompanyName", "Kongsberg Oil & Gas Technologies AS"
             VALUE "FileDescription", "Coin3D, 3D graphics rendering library - https://github.com/coin3d/"
             VALUE "FileVersion","@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@, @COIN_BETA_VERSION@"
-            VALUE "InternalName", "@PROJECT_NAME@"
+            VALUE "InternalName", "@COIN_OUTPUT_NAME@"
             VALUE "LegalCopyright", "Copyright (c) @COIN_BUILD_YEAR@ Kongsberg Oil & Gas Technologies AS"
 #ifdef _DEBUG
-            VALUE "OriginalFilename", "@PROJECT_NAME@@PROJECT_VERSION_MAJOR@d.dll"
+            VALUE "OriginalFilename", "@COIN_OUTPUT_NAME@@PROJECT_VERSION_MAJOR@d.dll"
 #else
-            VALUE "OriginalFilename", "@PROJECT_NAME@@PROJECT_VERSION_MAJOR@.dll"
+            VALUE "OriginalFilename", "@COIN_OUTPUT_NAME@@PROJECT_VERSION_MAJOR@.dll"
 #endif
             VALUE "ProductName", "Coin3D"
             VALUE "ProductVersion","@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@, @COIN_BETA_VERSION@"

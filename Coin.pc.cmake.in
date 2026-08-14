@@ -15,7 +15,7 @@ Description: A high-level 3D graphics toolkit, fully compatible with SGI Open In
 Version: @PROJECT_VERSION@
 Requires:
 Conflicts:
-Libs: -L${libdir} -lCoin @COIN_EXTRA_LDFLAGS@ @COIN_EXTRA_LIBS@
+Libs: -L${libdir} -l@COIN_OUTPUT_NAME@ @COIN_EXTRA_LDFLAGS@ @COIN_EXTRA_LIBS@
 Cflags: -I${includedir} @COIN_EXTRA_CFLAGS@ @COIN_EXTRA_CPPFLAGS@
 
 have_3ds_import=@FEAT_HAVE_3DS@

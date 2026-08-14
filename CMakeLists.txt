@@ -9,6 +9,13 @@ set(COIN_VERSION ${COIN_MAJOR_VERSION}.${COIN_MINOR_VERSION}.${COIN_MICRO_VERSIO
 project(Coin VERSION ${COIN_MAJOR_VERSION}.${COIN_MINOR_VERSION}.${COIN_MICRO_VERSION})
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
 
+# This fork carries a deliberately divergent ABI (e.g. SoShaderProgram grew a
+# field), so the binary gets its own name: it must never be confused with, or
+# silently replaced by, a stock libCoin of the same soversion at runtime. The
+# CMake package and the Coin::Coin imported target keep their upstream names,
+# so client projects follow the rename on a plain rebuild.
+set(COIN_OUTPUT_NAME "CoinRT" CACHE STRING "Base file name of the built Coin library")
+
 string(TIMESTAMP COIN_BUILD_YEAR "%Y")
 math(EXPR COIN_SO_VERSION ${PROJECT_VERSION_MAJOR}*20)
 

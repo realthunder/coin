@@ -211,7 +211,7 @@ if(WIN32)
     target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rc")
     target_compile_definitions(${PROJECT_NAME} INTERFACE COIN_DLL)
     if(MINGW)
-      set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_NAME ${PROJECT_NAME}-${COIN_SO_VERSION})
+      set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_NAME ${COIN_OUTPUT_NAME}-${COIN_SO_VERSION})
     endif()
   else()
     target_compile_definitions(${PROJECT_NAME} INTERFACE COIN_NOT_DLL)
@@ -265,6 +265,12 @@ if(WIN32 AND NOT MINGW)
   set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${COIN_SO_VERSION})
 else()
   set_target_properties(${PROJECT_NAME} PROPERTIES VERSION "${COIN_SO_VERSION}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}" SOVERSION ${COIN_SO_VERSION})
+endif()
+
+# The fork's own binary name (see the COIN_OUTPUT_NAME comment in the top-level
+# CMakeLists.txt). The Mac framework build sets its own OUTPUT_NAME above.
+if(NOT COIN_BUILD_MAC_FRAMEWORK)
+  set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${COIN_OUTPUT_NAME})
 endif()
 
 # Setting up a framework means adding all the files and links under a framework

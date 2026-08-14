@@ -22,7 +22,10 @@ if (EXISTS "@PACKAGE_COIN_DOC_DIR@/")
   set(Coin_DOC_DIR     "@PACKAGE_COIN_DOC_DIR@")
 endif()
 
-set(COIN_NAME @CMAKE_PROJECT_NAME@)
+# The link name of the actual binary -- the fork renames it (COIN_OUTPUT_NAME
+# in the top-level CMakeLists.txt); legacy Coin_LIBRARY/Coin_LIBRARIES
+# variable consumers must link the real file name, not the project name.
+set(COIN_NAME @COIN_OUTPUT_NAME@)
 
 set(COIN_BUILD_SHARED_LIBS @COIN_BUILD_SHARED_LIBS@)
 if(WIN32)

@@ -578,6 +578,17 @@ SoIndexedLineSet::generatePrimitives(SoAction *action)
     while (cindices + 1 < end) { // need at least two vertices
       previ = *cindices++;
 
+      if (previ < 0) {
+        // An empty polyline (nothing between separators). No primitive,
+        // but it still occupies a line index: derived data (e.g. a
+        // per-line part table) identifies a line by its separator
+        // ordinal. Before this check a -1 became the START vertex of
+        // the next polyline, emitting a bogus segment from coordinate
+        // index -1 -- an out-of-bounds read.
+        lineDetail.incLineIndex();
+        continue;
+      }
+
       if (matPerPolyline || mbind >= PER_VERTEX) {
         if (matindices) vertex.setMaterialIndex(*matindices++);
         else vertex.setMaterialIndex(matnr++);
@@ -666,8 +677,21 @@ SoIndexedLineSet::generatePrimitives(SoAction *action)
   }
 
   while (cindices + 1 < end) { // need at least two vertices
-    this->beginShape(action, LINE_STRIP, &lineDetail);
     i = *cindices++;
+    if (i < 0) {
+      // An empty polyline (nothing between separators). No primitive,
+      // but it still occupies a line index: derived data (e.g. a
+      // per-line part table) identifies a line by its separator
+      // ordinal. Before this check a -1 became the first vertex of a
+      // strip -- in a release build the assert below was compiled out
+      // and coordinate index -1 was read out of bounds, emitting a
+      // degenerate segment. Note: indexed per-line material/normal
+      // bindings do not advance here, matching the render path's
+      // treatment of empty polylines.
+      lineDetail.incLineIndex();
+      continue;
+    }
+    this->beginShape(action, LINE_STRIP, &lineDetail);
     assert(i >= 0);
     if (matindices) {
       pointDetail.setMaterialIndex(*matindices);
@@ -700,7 +724,16 @@ SoIndexedLineSet::generatePrimitives(SoAction *action)
     this->shapeVertex(&vertex);
 
     i = *cindices++;
-    assert(i >= 0);
+    if (i < 0) {
+      // A one-vertex polyline: no segment (a strip needs two), same
+      // out-of-bounds hazard as the empty polyline above.
+      this->endShape();
+      if (mbind == PER_VERTEX_INDEXED) matindices++;
+      if (nbind == PER_VERTEX_INDEXED) normindices++;
+      if (doTextures && texindices) texindices++;
+      lineDetail.incLineIndex();
+      continue;
+    }
     if (mbind >= PER_VERTEX) {
       if (matindices) vertex.setMaterialIndex(*matindices++);
       else vertex.setMaterialIndex(matnr++);

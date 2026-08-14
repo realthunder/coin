@@ -34,6 +34,7 @@ set(COIN_ELEMENTS_FILES
 	SoFontSizeElement.cpp
 	SoInt32Element.cpp
 	SoLazyElement.cpp
+	SoLazyElementEx.cpp
 	SoLightAttenuationElement.cpp
 	SoLightElement.cpp
 	SoLightModelElement.cpp
@@ -87,6 +88,7 @@ set(COIN_ELEMENTS_FILES
 
 # Files excluded from public API documentation, included in complete documentation.
 set(COIN_ELEMENTS_INTERNAL_FILES
+	SoLazyElementEx.h
 	SoTextureScalePolicyElement.h
 	SoTextureScalePolicyElement.cpp
 	SoTextureScaleQualityElement.h

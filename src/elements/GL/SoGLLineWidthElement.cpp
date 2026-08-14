@@ -177,7 +177,17 @@ SoGLLineWidthElement::updategl(void)
   }
 
 
-  if (COIN_DEBUG) {
+  // An implementation that offers a single width supports no wide lines at
+  // all -- D3D12 through Mesa reports [1, 1] for the aliased range as well
+  // as the smooth one. No value an application could have chosen would have
+  // been honoured, so the clamp says something about the driver rather than
+  // about the request, and there is nothing to tell the programmer to do
+  // differently. Warning about it once per process only costs the next real
+  // warning its readership.
+  const SbBool degenerate =
+    SoGLLineWidthElement::sizerange[0] == SoGLLineWidthElement::sizerange[1];
+
+  if (COIN_DEBUG && !degenerate) {
     // Detect invalid values and warn the application programmer.
     // (0.0f is used as a "dummy" default value by our superclass and
     // by SoDrawStyle::lineWidth, so ignore that case.)

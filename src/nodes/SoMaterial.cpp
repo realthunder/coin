@@ -170,13 +170,12 @@
 #include <Inventor/elements/SoTransparencyElement.h>
 #include <Inventor/elements/SoLightModelElement.h>
 #include <Inventor/elements/SoGLVBOElement.h>
+#include <Inventor/elements/SoLazyElementEx.h>
 #include <Inventor/errors/SoDebugError.h>
 
 #include <Inventor/annex/Profiler/SoProfiler.h>
 #include <Inventor/annex/Profiler/elements/SoProfilerElement.h>
 #include <Inventor/annex/Profiler/SbProfilingData.h>
-
-#include "elements/SoLazyElementEx.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

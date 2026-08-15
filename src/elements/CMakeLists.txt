@@ -88,7 +88,6 @@ set(COIN_ELEMENTS_FILES
 
 # Files excluded from public API documentation, included in complete documentation.
 set(COIN_ELEMENTS_INTERNAL_FILES
-	SoLazyElementEx.h
 	SoTextureScalePolicyElement.h
 	SoTextureScalePolicyElement.cpp
 	SoTextureScaleQualityElement.h

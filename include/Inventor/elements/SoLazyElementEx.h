@@ -41,16 +41,14 @@
 // carries diffuse: pointers into the owning node's fields, valid for
 // the duration of the traversal, guarded by the node's id.
 //
-// The element is inert unless installed at runtime through the
-// exported C entry point coin_lazyex_install(), which registers the
-// type and enables it on SoCallbackAction, where it substitutes for
+// The element is inert until a client calls install(), which registers
+// the type and enables it on SoCallbackAction, where it substitutes for
 // SoLazyElement at the same stack index (the SoGLLazyElement idiom).
 // The GL render path is deliberately left alone: per-face
 // ambient/specular/emissive are glMaterial* state changes there, which
 // is why Open Inventor never indexed them, and the consumer of this
-// element (an external render-cache builder traversing with an
-// SoCallbackAction) reads it through the C accessors declared below
-// rather than through this header, so the class layout is not ABI.
+// element is an external render-cache builder traversing with an
+// SoCallbackAction.
 
 #include <Inventor/elements/SoLazyElement.h>
 
@@ -61,6 +59,18 @@ class COIN_DLL_API SoLazyElementEx : public SoLazyElement {
 
 public:
   static void initClass(void);
+
+  // Registers the type and enables it on SoCallbackAction, in place of
+  // SoLazyElement. Idempotent, and must be called after SoDB::init();
+  // returns FALSE if it was not (nothing is installed then).
+  static SbBool install(void);
+  static SbBool isInstalled(void);
+
+  // The element of the given traversal state, or NULL when that state's
+  // lazy element is the stock one -- which is every state until
+  // install() has run, and every action other than SoCallbackAction.
+  static const SoLazyElementEx * getInstance(const SoState * state);
+
 protected:
   virtual ~SoLazyElementEx();
 public:
@@ -95,8 +105,6 @@ public:
                              const SbColor * specular, int numspecular,
                              const float * shininess, int numshininess);
 
-  static SbBool isInstalled(void);
-
   const FieldArray & getAmbientArray(void) const { return this->exstate.ambient; }
   const FieldArray & getEmissiveArray(void) const { return this->exstate.emissive; }
   const FieldArray & getSpecularArray(void) const { return this->exstate.specular; }
@@ -129,34 +137,5 @@ private:
     FieldArray shininess;
   } exstate;
 };
-
-// The C surface consumers bind to at runtime (dlsym/GetProcAddress);
-// present means extended, absent means stock Coin. Keep it stable.
-extern "C" {
-
-// Feature level of this surface; bump when the surface grows.
-COIN_DLL_API int coin_lazyex_abi_version(void);
-
-// Registers the element type and enables it on SoCallbackAction.
-// Idempotent. Must be called after SoDB::init(). Returns the abi
-// version on success, 0 on failure.
-COIN_DLL_API int coin_lazyex_install(void);
-
-// Each returns the number of entries of the field's array form in the
-// given traversal state (0 when not installed, the element is not the
-// extended one, or the field holds only its scalar), and fills in a
-// borrowed pointer -- 3 floats per entry for the colors, 1 for
-// shininess -- plus the id of the node the array was captured from.
-// The pointer is only valid during the traversal that set it.
-COIN_DLL_API int coin_lazyex_get_ambient(void * state, const float ** values,
-                                         uint64_t * nodeid);
-COIN_DLL_API int coin_lazyex_get_emissive(void * state, const float ** values,
-                                          uint64_t * nodeid);
-COIN_DLL_API int coin_lazyex_get_specular(void * state, const float ** values,
-                                          uint64_t * nodeid);
-COIN_DLL_API int coin_lazyex_get_shininess(void * state, const float ** values,
-                                           uint64_t * nodeid);
-
-} // extern "C"
 
 #endif // !COIN_SOLAZYELEMENTEX_H

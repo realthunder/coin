@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \**************************************************************************/
 
-#include "elements/SoLazyElementEx.h"
+#include <Inventor/elements/SoLazyElementEx.h>
 
 #include <Inventor/actions/SoCallbackAction.h>
 #include <Inventor/misc/SoState.h>
@@ -73,9 +73,31 @@ SoLazyElementEx::push(SoState * state)
 }
 
 SbBool
+SoLazyElementEx::install(void)
+{
+  if (lazyex_installed) return TRUE;
+  if (SoLazyElement::getClassTypeId() == SoType::badType()) return FALSE;
+  SoLazyElementEx::initClass();
+  SoCallbackAction::enableElement(SoLazyElementEx::getClassTypeId(),
+                                  SoLazyElementEx::getClassStackIndex());
+  lazyex_installed = TRUE;
+  return TRUE;
+}
+
+SbBool
 SoLazyElementEx::isInstalled(void)
 {
   return lazyex_installed;
+}
+
+const SoLazyElementEx *
+SoLazyElementEx::getInstance(const SoState * state)
+{
+  if (!lazyex_installed || !state) return NULL;
+  const SoElement * elem =
+    state->getConstElement(SoLazyElement::getClassStackIndex());
+  if (elem->getTypeId() != SoLazyElementEx::getClassTypeId()) return NULL;
+  return static_cast<const SoLazyElementEx *>(elem);
 }
 
 void
@@ -175,67 +197,3 @@ SoLazyElementEx::setMaterialElt(SoNode * node, uint32_t bitmask,
   if (bitmask & SHININESS_MASK) this->exstate.shininess.clear();
 }
 
-// *************************************************************************
-// the runtime-bound C surface
-
-static int
-lazyex_get_field(void * state, const float ** values, uint64_t * nodeid,
-                 const SoLazyElementEx::FieldArray & (SoLazyElementEx::*getter)(void) const)
-{
-  if (!lazyex_installed || !state) return 0;
-  SoState * sostate = static_cast<SoState *>(state);
-  const SoElement * elem =
-    sostate->getConstElement(SoLazyElement::getClassStackIndex());
-  if (elem->getTypeId() != SoLazyElementEx::getClassTypeId()) return 0;
-  const SoLazyElementEx::FieldArray & field =
-    (static_cast<const SoLazyElementEx *>(elem)->*getter)();
-  if (values) *values = field.values;
-  if (nodeid) *nodeid = field.nodeid;
-  return field.num;
-}
-
-extern "C" {
-
-int
-coin_lazyex_abi_version(void)
-{
-  return 1;
-}
-
-int
-coin_lazyex_install(void)
-{
-  if (lazyex_installed) return coin_lazyex_abi_version();
-  if (SoLazyElement::getClassTypeId() == SoType::badType()) return 0;
-  SoLazyElementEx::initClass();
-  SoCallbackAction::enableElement(SoLazyElementEx::getClassTypeId(),
-                                  SoLazyElementEx::getClassStackIndex());
-  lazyex_installed = TRUE;
-  return coin_lazyex_abi_version();
-}
-
-int
-coin_lazyex_get_ambient(void * state, const float ** values, uint64_t * nodeid)
-{
-  return lazyex_get_field(state, values, nodeid, &SoLazyElementEx::getAmbientArray);
-}
-
-int
-coin_lazyex_get_emissive(void * state, const float ** values, uint64_t * nodeid)
-{
-  return lazyex_get_field(state, values, nodeid, &SoLazyElementEx::getEmissiveArray);
-}
-
-int
-coin_lazyex_get_specular(void * state, const float ** values, uint64_t * nodeid)
-{
-  return lazyex_get_field(state, values, nodeid, &SoLazyElementEx::getSpecularArray);
-}
-
-int
-coin_lazyex_get_shininess(void * state, const float ** values, uint64_t * nodeid)
-{
-  return lazyex_get_field(state, values, nodeid, &SoLazyElementEx::getShininessArray);
-}
-
-} // extern "C"

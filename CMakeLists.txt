@@ -578,8 +578,11 @@ if(WIN32)
   set(CMAKE_DEBUG_POSTFIX "${COIN_DEFAULT_POSTFIX}d"
     CACHE STRING "Default filename postfix for libraries under configuration Debug")
 
-  set(COIN_RELEASE_SYSTEM_LIBRARY_NAME Coin${CMAKE_RELEASE_POSTFIX}${COIN_LIBRARY_SUFFIX})
-  set(COIN_DEBUG_SYSTEM_LIBRARY_NAME Coin${CMAKE_DEBUG_POSTFIX}${COIN_LIBRARY_SUFFIX})
+  # cc_dl_coin_handle() opens this by name at runtime, so it has to be the
+  # file that is actually built -- COIN_OUTPUT_NAME, not the project name.
+  # The other platforms below get that from $<TARGET_FILE_NAME:Coin>.
+  set(COIN_RELEASE_SYSTEM_LIBRARY_NAME ${COIN_OUTPUT_NAME}${CMAKE_RELEASE_POSTFIX}${COIN_LIBRARY_SUFFIX})
+  set(COIN_DEBUG_SYSTEM_LIBRARY_NAME ${COIN_OUTPUT_NAME}${CMAKE_DEBUG_POSTFIX}${COIN_LIBRARY_SUFFIX})
 elseif(APPLE)
   if(POLICY CMP0042)
     # get rid of MACOSX_RPATH warning on Mac OS X from CMake 3.12.2

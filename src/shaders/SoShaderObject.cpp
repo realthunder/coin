@@ -103,6 +103,15 @@
   rendering skips them.
 */
 
+/*!
+  \var SoShaderObject::SourceType SoShaderObject::MATERIALX
+
+  Specifies a MaterialX (.mtlx) material document (realthunder fork
+  extension). sourceProgram carries the document XML rather than
+  shading-language text; an external render backend turns the graph
+  into whatever it renders. Coin's own GL rendering skips them.
+*/
+
 
 /*!
   \var SoMFNode SoShaderObject::parameter
@@ -264,6 +273,7 @@ SoShaderObject::SoShaderObject(void)
   SO_NODE_DEFINE_ENUM_VALUE(SourceType, GLSL_PROGRAM);
   SO_NODE_DEFINE_ENUM_VALUE(SourceType, FILENAME);
   SO_NODE_DEFINE_ENUM_VALUE(SourceType, BGFX_SC);
+  SO_NODE_DEFINE_ENUM_VALUE(SourceType, MATERIALX);
 
   SO_NODE_ADD_FIELD(sourceType, (FILENAME));
   SO_NODE_SET_SF_ENUM_TYPE(sourceType, SourceType);
@@ -429,9 +439,11 @@ SoShaderObjectP::GLRender(SoGLRenderAction * action)
     // if file could not be read
     if (this->cachedSourceType == SoShaderObject::FILENAME) return;
 
-    // bgfx shaderc source is for external render backends only --
-    // silently skip it in Coin's own GL pipeline.
+    // bgfx shaderc source and MaterialX documents are for external
+    // render backends only -- silently skip them in Coin's own GL
+    // pipeline.
     if (this->cachedSourceType == SoShaderObject::BGFX_SC) return;
+    if (this->cachedSourceType == SoShaderObject::MATERIALX) return;
 
     if (!this->isSupported(this->cachedSourceType, glue)) {
       SbString s;
@@ -503,6 +515,10 @@ SoShaderObjectP::checkType(void)
     SbString subStr = fileName.getSubString(len-5);
     if (subStr == ".glsl" || subStr == ".vert" || subStr == ".frag") {
       this->cachedSourceType = SoShaderObject::GLSL_PROGRAM;
+      return;
+    }
+    if (subStr == ".mtlx") {
+      this->cachedSourceType = SoShaderObject::MATERIALX;
       return;
     }
   }

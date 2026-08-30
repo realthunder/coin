@@ -39,6 +39,11 @@
       SoShaderProgram has the SoSFName "stage" field and shader sources
       may carry the BGFX_SC source type.
 
+    shader-materialx
+      SoShaderObject sources may carry the MATERIALX source type: the
+      sourceProgram is a MaterialX document rather than shading-language
+      text.
+
     shadow-transparency
       The SoShadowTransparency node and SoShadowTransparencyElement
       exist.
@@ -57,5 +62,5 @@ coin_fork_abi(void)
 const char *
 coin_fork_features(void)
 {
-  return "shader-stage shadow-transparency";
+  return "shader-stage shader-materialx shadow-transparency";
 }

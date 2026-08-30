@@ -59,7 +59,12 @@ public:
     FILENAME,
     // bgfx shaderc dialect (realthunder fork). Consumed by external
     // render backends; Coin's own GL rendering skips such shaders.
-    BGFX_SC
+    BGFX_SC,
+    // MaterialX document (realthunder fork). sourceProgram carries the
+    // .mtlx XML of a material graph, not shading-language text.
+    // Consumed by external render backends; Coin's own GL rendering
+    // skips such shaders.
+    MATERIALX
   };
 
   SoSFBool isActive;

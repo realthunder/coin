@@ -70,6 +70,11 @@ public:
   SoSFBool isActive;
   SoSFEnum sourceType;
   SoSFString sourceProgram;
+  // Which surface of a MATERIALX document this object is shaded by
+  // (realthunder fork). A document may state several materials; this
+  // names the one, and empty means the first it states. Ignored for
+  // every other source type, and by Coin's own GL rendering.
+  SoSFString sourceSurface;
   // FIXME: this field is an SoMFUniformShaderParameter in TGS
   // Inventor. We should also implement that field. 20050125 mortene.
   SoMFNode parameter;

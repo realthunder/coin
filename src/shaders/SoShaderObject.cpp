@@ -114,6 +114,20 @@
 
 
 /*!
+  \var SoSFString SoShaderObject::sourceSurface
+
+  Which surface of a MATERIALX document this object is shaded by
+  (realthunder fork extension).  A MaterialX document may state many
+  surfacematerial nodes -- an asset's whole material set is usually one
+  file -- and this names the one this object wears, by the name the
+  document gives it.  Empty, the default, means the first surface the
+  document states, which is what a single-material document has.
+
+  Meaningless for every other source type, and ignored by Coin's own GL
+  rendering along with the rest of a MATERIALX object.
+*/
+
+/*!
   \var SoMFNode SoShaderObject::parameter
 
   The shader program parameters.
@@ -279,6 +293,7 @@ SoShaderObject::SoShaderObject(void)
   SO_NODE_SET_SF_ENUM_TYPE(sourceType, SourceType);
 
   SO_NODE_ADD_FIELD(sourceProgram, (""));
+  SO_NODE_ADD_FIELD(sourceSurface, (""));
   SO_NODE_ADD_FIELD(parameter, (NULL));
   this->parameter.setNum(0);
   this->parameter.setDefault(TRUE);
@@ -803,6 +818,7 @@ SoShaderObjectP::sensorCB(void *data, SoSensor *sensor)
   SoField * field = ((SoNodeSensor *)sensor)->getTriggerField();
 
   if (field == &thisp->owner->sourceProgram ||
+      field == &thisp->owner->sourceSurface ||
       field == &thisp->owner->sourceType) {
     thisp->deleteGLShaderObjects();
     thisp->shouldload = TRUE;

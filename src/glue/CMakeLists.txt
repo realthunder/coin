@@ -18,6 +18,9 @@ set(COIN_GLUE_FILES
 	freetype.cpp
 	normalization_cubemap.cpp
 )
+if(COIN_BUILD_GL_STUB)
+	list(APPEND COIN_GLUE_FILES gl_stub.cpp)
+endif()
 
 # Files excluded from public API documentation, included in complete documentation.
 set(COIN_GLUE_INTERNAL_FILES

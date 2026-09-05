@@ -119,6 +119,7 @@ cmake_dependent_option(COIN_BUILD_MAC_AGL "Build for AGL on Mac OS X when ON. De
 
 option(COIN_BUILD_GLX "Build for GLX on Linux when ON. Default is ON." ON)
 option(COIN_BUILD_EGL "Build for EGL on Linux when ON. Default is ON." ON)
+option(COIN_BUILD_GL_STUB "No GL platform at all: skip the OpenGL and X11 lookups and link the core gl*() entry points to an empty stub (src/glue/gl_stub.cpp) -- a Coin that never renders, for a host without GL such as FreeCAD's Python sandbox guest compiled to wasm. Default is OFF." OFF)
 
 check_include_file_cxx(thread HAVE_STD_THREAD)
 cmake_dependent_option(COIN_DEBUG_CHECK_THREAD "Enable thread check in several central Coin functions." OFF "HAVE_STD_THREAD" OFF)
@@ -218,6 +219,10 @@ if(COIN_BUILD_MAC_X11)
     list(APPEND COIN_TARGET_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR} ${X11_GL_INCLUDE_PATH})
     list(APPEND COIN_TARGET_LINK_LIBRARIES ${X11_LIBRARIES} ${X11_GL_LIB} ${X11_GLU_LIB})
   endif()
+elseif(COIN_BUILD_GL_STUB)
+  # the headers still come from the toolchain's sysroot (the gl.h
+  # checks below find them); the entry points come from the stub
+  set(HAVE_OPENGL 1)
 else()
   if(UNIX AND NOT APPLE AND COIN_BUILD_GLX)
     find_package(X11 REQUIRED)
